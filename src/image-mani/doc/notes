@@ -1,0 +1,26 @@
+It appears almost all images from Google is bitmapinfoheader
+Therefore support for this header is very needed
+
+
+
+
+
+Quick notes
+#########################################
+
+Attack on the header
+
+Step 1.
+Read first 14 bytes(This is the first header section in the bmp).
+The first of theese bytes will determine what header type it is.
+
+Step 2.
+Read the next 12/40/64/108/etc..(header size in bytes) bytes of the bitmap.
+Next save them structured in memory. See documentation for more info.
+
+Step 3.
+You are done my sir. If you studied the documentation enough you will know where the pixel table is starting in the file, by knowing the offset.
+
+######################
+
+

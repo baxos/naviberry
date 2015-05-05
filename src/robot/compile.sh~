@@ -1,0 +1,18 @@
+#!/bin/bash
+# Shell script for compiling robot source code to binary
+# Written 2015
+
+COMPILE_FLAGS = "-ggdb -Werror -Wall"
+
+echo "Compiling everything with debug flag"
+echo "Compiling netpacket"
+gcc $COMPILE_FLAGS -c netpacket.c -o netpacket.o
+echo "Compiling network"
+gcc $COMPILE_FLAGS -c network.c -o network.o
+echo "Compiling llist"
+gcc $COMPILE_FLAGS -c llist.c -o llist.o
+echo "Compiling argparse"
+gcc $COMPILE_FLAGS -c argparse.c -o argparse.o
+echo "Compiling objects to final binary"
+gcc $COMPILE_FLAGS  network.o netpacket.o llist.o argparse.o -lm -o robot
+echo "Done"

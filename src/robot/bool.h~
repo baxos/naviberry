@@ -1,0 +1,14 @@
+#ifndef __BOOL__H__
+#define __BOOL__H__
+#include <stdint.h>
+
+
+// Bool is 1 byte signed
+#define BOOL 10 
+// False is equal to zero
+#define FALSE 0
+// True is equal to not false
+#define TRUE !FALSE
+
+
+#endif

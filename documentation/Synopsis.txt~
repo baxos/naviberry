@@ -1,0 +1,7 @@
+						SYNOPSIS
+================================================================================================================
+	
+The idea behind this project is to create a cheap robot, which can draw a map of it surronding and afterwards navigate on that map.
+It will draw the map as a 2D map(bird view), it will be drawn using a IR distance sensor. So when we can confirm there is a object(wall, furniture, etc..) we will add
+a block on that position of the map. The more map we have of the area the robot is in, the better it should be to navigate and select the fastest path avaiable.  The pathfinding algoritm is a slighly modified to my needs A* algorithm, one of the modifications is to keep a greater distance to walls/blocks. 
+

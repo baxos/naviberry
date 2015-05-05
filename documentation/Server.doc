@@ -1,0 +1,46 @@
+The server is supposed to be running on the robot. 
+
+It will read the encryption key on startup, set up socket and wait for connection.
+When someone is connects to it, it will wait for a encrypted password. If it fails 3 times, it will ban connections for 5 minutes..
+
+All communication between server and client will be encrypted using the encryption key[1].
+
+
+Definitions of commands can be find in the header file "comm.h"
+Some of the most important are:
+=============================
+1. start
+2. disconnect
+3. status
+4. ping
+5, stop
+=============================
+
+When server is connected properly to the correct client it will send the signal "SERVER_WAITING" when client recieves this, it can send commands
+to the server. When the server recieves a command, it will respond with "SERVER_SUCCESS", **NOTE** this doesn't mean that it recognized the command.
+The server will though respond with "SERVER_UNKNOWN_COMMAND" if the command isn't recognized later in the process..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1] Encryption key - See Security.doc 

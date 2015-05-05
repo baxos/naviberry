@@ -1,0 +1,8 @@
+#!/bin/python3
+# Setup script written in Python 3
+# Goal is to ask user various questions regarding setup
+# and then do the setup..
+# Written 2015
+
+print('Welcome to [NAME] Setup script')
+print('Please select port number : ')

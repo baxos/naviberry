@@ -1,0 +1,23 @@
+#ifndef __STACK__H__
+#define __STACK__H__
+
+#include <string.h>
+#include "bool.h"
+
+
+typedef struct
+{
+  size_t stack_size;
+  int stack_pointer;
+  void** the_stack;
+} Stack;
+
+int Stack_Create(Stack** _stk, size_t _size);
+int Stack_Push(Stack** _stk,void* _val);
+int Stack_Pop(Stack** _stk, void* _dst);
+int Stack_Peek(Stack** _stk, int* _dst);
+int Stack_Free(Stack** _stk);
+BOOL Stack_isEmpty(Stack** _stk);
+BOOL Stack_isFull(Stack** _stk);
+
+#endif
