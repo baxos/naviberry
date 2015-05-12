@@ -13,11 +13,13 @@
 #include <sys/types.h>
 #include <string.h>
 #include <netinet/in.h>
+#include <bcm2835.h>
 #include "./include/bool.h"
 #include "./include/utils.h"
 #include "./include/comm.h"
 #include "./include/status.h"
-
+#include "./include/bcmwrapper.h"
+#include "./include/motordriver.h"
 
 void print_err(const char* err_msg)
 {
@@ -27,18 +29,6 @@ void print_err(const char* err_msg)
   exit(EXIT_FAILURE);
 }
 
-void EnterMatrix(int sock)
-{
-  int counter = 6000;
-
-  while (counter > 0)
-    {
-      comm_sendtxt(sock, "00101010001110100101010101000101010101010101010101010");
-      counter--;
-      usleep(100);
-    }
-
-}
 
 int main()
 {
@@ -46,8 +36,8 @@ int main()
   int sockfd, con_sockfd;
   const int   in_port = 1000;
   const char* in_host = "localhost";
-  
   BOOL prog_running = TRUE;
+  struct MOTOR* motA = malloc(sizeof(struct MOTOR*));
   
 
   // Create socket for server(listening socket)
@@ -108,6 +98,21 @@ int main()
   char buffer[256];
   size_t recv_size = 0;
 
+  // Initiaize gpio pins
+  if (!bcm2835_init())
+    {
+      print_err("BCM2835 failed to initialize.\n");
+    }
+
+  // Setup ports
+  // Setup connected LED
+  GPIO_setup(PIN5, GPIO_OUT);
+  GPIO_out(PIN5, HIGH);
+
+  printf("[+]Initializing motorA..\n");
+  Motor_Init(&motA, PIN11, PIN13, PIN15);
+
+
   // Set server status to ready..
   server_SetStatus(SERVER_STATUS_READY);
 
@@ -134,18 +139,34 @@ int main()
 	  util_TrimString(buffer);
 	  	  
 	  // Check for recognized cmds
-	  if ( strcmp(buffer, "disconnect") == 0)
+	  if ( strcmp(buffer, "CLIENT_DISCONNECT") == 0)
 	    {
 	      comm_sendtxt(con_sockfd, comm_REPLY_DISCONNECT);
 	      prog_running = FALSE;
 	    }
-	  else if ( strcmp(buffer, "ping") == 0)
+	  else if ( strcmp(buffer, "CLIENT_PING") == 0)
 	    {
 	      comm_sendtxt(con_sockfd, comm_REPLY_PONG);
 	    }
-	  else if ( strcmp(buffer, "EnterMatrix") == 0)
+	  else if ( strcmp(buffer, "CLIENT_MOTORA_ON") == 0)
 	    {
-	      EnterMatrix(con_sockfd);
+	      printf("Starting MotorA\n");
+	      Motor_Start(&motA);
+	    }
+	  else if ( strcmp(buffer, "CLIENT_MOTORA_OFF") == 0)
+	    {
+	      printf("Stopping MotorA\n");
+	      Motor_Stop(&motA);
+	    }
+	  else if ( strcmp(buffer, "CLIENT_MOTORA_FORWARD") == 0)
+	    {
+	      printf("MotorA Forward\n");
+	      Motor_setDirection(&motA, 1);
+	    }
+	  else if ( strcmp(buffer, "CLIENT_MOTORA_BACKWARD") == 0)
+	    {
+	      printf("MotorB Backward\n");
+	      Motor_setDirection(&motA, 0);
 	    }
 	  else
 	    {
@@ -155,7 +176,13 @@ int main()
 	  
 	}
     }
-  
+
+  // Clear LED
+  GPIO_out(PIN5, LOW);
+
+
+  // Clean motor
+  Motor_Clean(&motA);
 
   // Shut down sockets
   printf("Shutting down sockets..\n");
