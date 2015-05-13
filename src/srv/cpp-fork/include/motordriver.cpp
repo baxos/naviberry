@@ -20,19 +20,26 @@ extern "C"
 #include "bcm2835.h"
 }
 
-
+// DC_Motor Start void function
+// Starts the motor, by setting PIN_E to high
 void DC_Motor::Start()
 {
   print_msg("Motor starting");
   GPIO_out(pin_e, HIGH);
 }
 
+// DC_Motor Stop void function
+// Stops the motor, by setting PIN_E to low
 void DC_Motor::Stop()
 {
   print_msg("Motor stopping");
   GPIO_out(pin_e, LOW);
 }
 
+// DC_Motor setDirection void function
+// Takes input as direction
+// 0 is clockwise
+// 1 is counter-clockwise
 void DC_Motor::setDirection(uint8_t _direct)
 {
   // Save current motor state
@@ -75,6 +82,9 @@ void DC_Motor::setDirection(uint8_t _direct)
     }
 }
 
+// DC_Motor DC_Motor De-constructor function
+// When class is about to be cleaned, this function is called
+// So we clean, set all pins used to low
 DC_Motor::~DC_Motor(void)
 {
   print_msg("De-constructor called on DC_Motor");
@@ -84,6 +94,11 @@ DC_Motor::~DC_Motor(void)
   GPIO_out(pin_e, LOW);
 }
 
+// DC_Motor DC_Motor constructor function
+// Takes 3 integer inputs
+// pin_e = Enable PIN
+// pin_r = Logic pin1
+// pin_l = Logic pin2
 DC_Motor::DC_Motor(uint8_t _pin_e, uint8_t _pin_l, uint8_t _pin_r)
 {
   print_msg("Motor initialization");
