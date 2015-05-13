@@ -71,10 +71,10 @@ int main()
     {
       // Zero set buffer for every run..
       // memset(buffer,0, sizeof(buffer));
-
+      buffer = "";
       
       // Tell client we are waiting
-      printf("Waiting for command..\n");
+      print_msg("Waiting for command..");
       net.WriteText(comm_REPLY_WAITING);
       
       // Read text from client
@@ -86,18 +86,26 @@ int main()
       // Check for recognized cmds
       if (buffer.compare("CLIENT_DISCONNECT")==0)
 	    {
+	      print_warning("Recieved DISONNECT signal, closing down");
 	      net.WriteText(comm_REPLY_DISCONNECT);
 	      prog_running = false;
 	    }	  
       else if(buffer.compare("CLIENT_MOTOR_START")==0)
 	{
 	  // Start motor
+	  print_msg("STARTING MOTOR");
 	  motor.Start();
 	}
       else if(buffer.compare("CLIENT_MOTOR_STOP")==0)
 	{
 	  // Stop motor
 	  motor.Stop();
+	}
+      else
+	{
+	  print_warning("Unknown message recived :");
+	  print_warning(buffer);
+	 
 	}
       
 

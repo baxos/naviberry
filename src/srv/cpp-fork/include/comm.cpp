@@ -128,9 +128,11 @@ std::string Network::ReadText(void)
   else
     {
       // Success
-      for (auto i = 0; i > n; i++)
+      std::cout << "Recieved : " << n << " data from server, copying to string" << std::endl;
+      for (auto i = 0; i < n; i++)
 	{
-	  str_buffer.push_back(buffer[i]);
+	  auto c = buffer[i];
+	  str_buffer.push_back(c);
 	}
     }
 
