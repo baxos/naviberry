@@ -10,7 +10,7 @@ private:
   int sfd;
   bool ready;
 public:
-  SerialComm(string port);
-  void Read(string dest);
-  void Write(string data);
-}
+  SerialComm(std::string port);
+  std::string Read(std::string dest);
+  void Write(std::string data);
+};

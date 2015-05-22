@@ -24,6 +24,7 @@ extern "C"
 // Starts the motor, by setting PIN_E to high
 void DC_Motor::Start()
 {
+  running = 1;
   print_msg("Motor starting");
   GPIO_out(pin_e, HIGH);
 }
@@ -32,9 +33,18 @@ void DC_Motor::Start()
 // Stops the motor, by setting PIN_E to low
 void DC_Motor::Stop()
 {
+  running = 0;
   print_msg("Motor stopping");
   GPIO_out(pin_e, LOW);
 }
+// DC_Motor getDirection integer function
+// Takes no inputs
+// Return 0 for clockwise, 1 for counter-clockwise
+uint8_t DC_Motor::getDirection()
+{
+  return direction;
+}
+
 
 // DC_Motor setDirection void function
 // Takes input as direction
@@ -46,8 +56,10 @@ void DC_Motor::setDirection(uint8_t _direct)
   auto motor_on = running;
 
   // If motor is on, halt it
+  
   if (motor_on != 0)
     {
+      print_msg("Motor running, halt it");
       Stop();
     }
 
@@ -57,6 +69,7 @@ void DC_Motor::setDirection(uint8_t _direct)
     case 0:
       // Right
       // Set logic
+      print_msg("Setting motor direction to right");
       GPIO_out(pin_l, LOW);
       GPIO_out(pin_r, HIGH);
       // Set class variable
@@ -65,6 +78,7 @@ void DC_Motor::setDirection(uint8_t _direct)
     case 1:
       // Left
       // Set logic
+      print_msg("Setting motor direction to left");
       GPIO_out(pin_r, LOW);
       GPIO_out(pin_l, HIGH);
       // Set class variable
@@ -78,6 +92,7 @@ void DC_Motor::setDirection(uint8_t _direct)
   // If motor was running, start it again
   if (motor_on)
     {
+      print_msg("Switching done, starting motor..");
       Start();
     }
 }

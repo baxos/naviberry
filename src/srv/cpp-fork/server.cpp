@@ -7,6 +7,8 @@
 */
 #include <iostream>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 extern "C"
 {
 #include <sys/types.h>
@@ -18,6 +20,13 @@ extern "C"
 #include "./include/naviberryio.hpp"
 #include "./include/bcmwrapper.hpp"
 #include "./include/motordriver.hpp"
+#include "./include/serial.hpp"
+
+
+void rob_sleep(int x)
+{
+  std::this_thread::sleep_for(std::chrono::milliseconds(x));
+}
 
 int main()
 {
@@ -29,7 +38,10 @@ int main()
     }
 
   // Create motor class
-  DC_Motor motor(PIN11, PIN13, PIN15);  
+  DC_Motor motorA(PIN11, PIN13, PIN15);  
+  DC_Motor motorB(PIN19, PIN21, PIN23);
+  SerialComm serial("/dev/ttyACM0");
+
   // Create network class
   Network net("localhost", 1000);
 
@@ -90,16 +102,105 @@ int main()
 	      net.WriteText(comm_REPLY_DISCONNECT);
 	      prog_running = false;
 	    }	  
-      else if(buffer.compare("CLIENT_MOTOR_START")==0)
+      // ============================= MOTOR A ====================================
+      else if(buffer.compare("CLIENT_MOTORA_START")==0)
 	{
 	  // Start motor
-	  print_msg("STARTING MOTOR");
-	  motor.Start();
+	  print_msg("STARTING MOTOR A");
+	  motorA.Start();
 	}
-      else if(buffer.compare("CLIENT_MOTOR_STOP")==0)
+      else if(buffer.compare("CLIENT_MOTORA_STOP")==0)
 	{
 	  // Stop motor
-	  motor.Stop();
+	  motorA.Stop();
+	}
+      else if (buffer.compare("CLIENT_READ_SENSOR")==0)
+	{
+	  // Ask arduino to print out reading
+	  serial.Write("READ_SENSOR");
+	  std::string test = serial.Read("");
+	  print_warning(test);
+	}
+      else if(buffer.compare("CLIENT_MOTORA_FORWARD")==0)
+	{
+	  motorA.setDirection(0);
+	}
+      else if (buffer.compare("CLIENT_MOTORA_BACKWARD")==0)
+	{
+	  motorA.setDirection(1);
+	}
+      // ============================ MOTOR B ===============================================
+      else if (buffer.compare("CLIENT_MOTORB_START")==0)
+	{
+	  print_msg("Motor B starting");
+	  motorB.Start();
+	}
+      else if (buffer.compare("CLIENT_MOTORB_STOP")==0)
+	{
+	  print_msg("Motor B stopping");
+	  motorB.Stop();
+	}
+      // ============================== Both motors ======================================
+      else if (buffer.compare("CLIENT_MOTORS_START")==0)
+	{
+	  print_msg("Starting both motors..");
+	  motorA.Start();
+	  motorB.Start();
+	}
+      else if (buffer.compare("CLIENT_MOTORS_STOP")==0)
+	{
+	  print_msg("Stopping both motors..");
+	  motorA.Stop();
+	  motorB.Stop();
+	}
+      else if (buffer.compare("CLIENT_MOTORS_FORWARD")==0)
+	{
+	  motorA.setDirection(0);
+	  motorB.setDirection(0);
+	}
+      else if (buffer.compare("CLIENT_MOTORS_TURNLEFT")==0)
+	{
+	  const auto sleep_time = 600;
+
+	  print_msg("Turning left");
+	  // Save state of motors
+	  auto mota_dir = motorA.getDirection();
+	  auto motb_dir = motorB.getDirection();
+	  // Change direcions of motors
+	  motorA.setDirection(1);
+	  motorB.setDirection(0);
+	  // Fire them up!
+	  motorA.Start();
+	  //motorB.Start();
+	  // Wait x time, then halt them!
+	  rob_sleep(sleep_time);
+	  motorA.Stop();
+	  //motorB.Stop();
+	  // Set motor state back to origin
+	  motorA.setDirection(mota_dir);
+	  motorB.setDirection(motb_dir);
+	}
+      else if (buffer.compare("CLIENT_MOTORS_TURNRIGHT")==0)
+	{
+	  const auto sleep_time = 600;
+
+	  print_msg("Turning right");
+	  // Save state of motors
+	  auto mota_dir = motorA.getDirection();
+	  auto motb_dir = motorB.getDirection();
+	  // Change directions
+	  motorA.setDirection(0);
+	  motorB.setDirection(1);
+	  // Fire them up
+	  //motorA.Start();
+	  motorB.Start();
+	  // Wait x ms and halt
+	  rob_sleep(sleep_time);
+	  //motorA.Stop();
+	  motorB.Stop();
+	  // Set motor stae back to origin
+	  motorA.setDirection(mota_dir);
+	  motorB.setDirection(motb_dir);
 	}
       else
 	{

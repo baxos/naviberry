@@ -16,7 +16,7 @@ void print_msg(std::string msg)
 // Prints warning std::string warning to stdout using red
 void print_warning(std::string warning)
 {
-  Color::Modifier TXT_RED (Color::FG_RED);
+  Color::Modifier TXT_RED (Color::FG_YELLOW);
   Color::Modifier TXT_DEF (Color::FG_DEFAULT);
   std::cout << TXT_RED << "[-] " << warning << TXT_DEF << std::endl;
 }

@@ -14,7 +14,7 @@ class DC_Motor
   void Start();
   void Stop();
   void setDirection(uint8_t _direct);
-  void getDirection(uint8_t _direct);
+  uint8_t getDirection();
 
 };
 

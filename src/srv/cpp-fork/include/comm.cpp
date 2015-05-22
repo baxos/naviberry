@@ -141,7 +141,7 @@ std::string Network::ReadText(void)
   if ( (n = recv(confd, &buffer, buff_size, 0)) == -1)
     {
       // Error
-      print_warning("Error reading text from socket");
+      print_error("Error reading text from socket");
     } 
   else
     {
