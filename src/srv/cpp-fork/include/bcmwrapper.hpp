@@ -25,6 +25,9 @@ extern "C"
 // Set output of pin, [low/high]
 void GPIO_out(uint8_t pin, uint8_t state);
 
+// Read from pin
+int GPIO_read(uint8_t pin);
+
 // Setup pin direction, [in/out]
 void GPIO_setup(uint8_t pin, uint8_t dir);
 
