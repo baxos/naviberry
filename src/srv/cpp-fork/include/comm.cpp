@@ -121,6 +121,8 @@ bool Network::WriteText(std::string txt)
     {
       if (n == txt.size())
 	{
+	  print_msg("Successfully send following data");
+	  print_msg(txt);
 	  // Success
 	  return true;
 	}

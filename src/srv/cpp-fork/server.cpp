@@ -1,6 +1,6 @@
 /* 
    Author      : Jan Emil Bacher
-   Name        : server.c
+   Name        : server.cpp
    Description : Server application used to recieve data from client and pass it further
                  on to system. See different list of commands in documentation/commands.lst
 		 Furthermore documentation can be found in report in section regarding server app.
@@ -23,6 +23,7 @@ extern "C"
 #include "./include/serial.hpp"
 #include "./include/sonicsensor.hpp"
 
+// change please!!!!!!!!!!!!!
 void rob_sleep(int x)
 {
   std::this_thread::sleep_for(std::chrono::milliseconds(x));
@@ -31,6 +32,8 @@ void rob_sleep(int x)
 int main()
 {
   // Initiaize gpio pins
+  // and this????
+  // how about cpp class wrapper instead of the c style wrap?
   if (!bcm2835_init())
     {
       print_error("BCM2835 failed to initialize.\n");
@@ -49,6 +52,7 @@ int main()
 
   // Setup network connection  
   // Craete socket
+  // How about make this in one function??
   if (!net.Create())
     {
       print_error("Error trying to create socket");
@@ -108,7 +112,13 @@ int main()
 	  print_warning("Reading from sensor!!!");
 	  soundSensor.Pulse();
 	  auto dist = soundSensor.ReadDistance();
-	  std::string dist_str = std::to_string(dist);
+	  if (dist == -1)
+	    {
+	      // Error reading
+	      
+	    }
+	  //std::string 
+	  auto dist_str = std::to_string(dist);
 	  std::cout << "TEST : " << dist_str << std::endl;
 	  net.WriteText(dist_str);
 
@@ -123,6 +133,7 @@ int main()
 	      // Stop
 	      // Measure
 	      // Repeat
+
 	      motorA.Start();
 	      motorB.Start();
 	      rob_sleep(100);
