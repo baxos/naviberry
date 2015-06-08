@@ -3,7 +3,7 @@
 # Name of binary executable 
 outputname = Test
 # the object files used
-objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o serial.o
+objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o serial.o sonicsensor.o
 # compile flags
 CFLAGS = -lbcm2835 -std=c++0x # -Werror -Wall
 
@@ -23,7 +23,8 @@ server.o:
 	g++ -c ./server.cpp -o ./server.o $(CFLAGS)
 comm.o:
 	g++ -c ./include/comm.cpp -o ./comm.o $(CFLAGS)
-
+sonicsensor.o:
+	g++ -c ./include/sonicsensor.cpp -o ./sonicsensor.o $(CFLAGS)
 serial.o:
 	g++ -c ./include/serial.cpp -o ./serial.o $(CFLAGS)
 

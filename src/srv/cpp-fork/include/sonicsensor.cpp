@@ -4,13 +4,15 @@
 #include <string>
 #include <chrono>
 #include <cstdlib>
+#include <thread>
 #include <fcntl.h>
 #include <unistd.h>
+#include <cstdint>
 #include "./naviberryio.hpp"
 #include "./sonicsensor.hpp"
 #include "./bcmwrapper.hpp"
 
-SonicSensor::SonicSensor(uint8_t _trig, uint8_t echo)
+SonicSensor::SonicSensor(uint8_t _trig, uint8_t _echo)
 {
   // Set class pins
   PIN_TRIG = _trig;
@@ -29,7 +31,7 @@ SonicSensor::SonicSensor(uint8_t _trig, uint8_t echo)
 
 void SonicSensor::microS_delay(int x)
 {
-  std::this_thread::sleep_for(std::chrono:microseconds(x));
+  std::this_thread::sleep_for(std::chrono::microseconds(x));
 }
 
 void SonicSensor::Pulse()
@@ -69,19 +71,31 @@ int SonicSensor::ReadDistance()
     }
 
   auto elapsed_echo = std::chrono::high_resolution_clock::now() - start_echo;
+  // auto tdiff = elapsed_echo - start_echo;
 
   // Find difference on timings
-  auto time_used = std::chrono::duration_cast<std::chrono::microseconds(elapsed_echo);
+  long long time_used = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_echo).count();
 
   // convert time to distance
   // and return distance in cm
+  long long distance = time_used/29/2;
   
+
 
   // If bad reading
   // Set bad read flag and return number BELOW zero
-  bad_read = true;
-  return -1;
-
+  if (distance < 0 || distance > 300)
+    {
+      print_warning("Sonic sensor BAD read!");
+      bad_read = true;
+      return -1;
+    }
+  else
+    {
+      std::cout << "TIME READ : " << time_used << " microSeconds \t distance : " << distance << " cm" << std::endl;
+      bad_read = false;
+      return (int) distance;
+    }
 }
 
 
