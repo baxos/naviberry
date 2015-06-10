@@ -5,9 +5,8 @@ outputname = Test
 # the object files used
 objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o serial.o sonicsensor.o
 # compile flags
-CFLAGS = -lbcm2835 -std=c++0x # -Werror -Wall
+CFLAGS = -lbcm2835 -std=c++0x -ggdb # -Werror -Wall
 
-all: Test
 
 Test: $(objects)
 	g++ -o $(outputname) $(objects) $(CFLAGS) 
@@ -22,7 +21,7 @@ naviberryio.o:
 server.o:
 	g++ -c ./server.cpp -o ./server.o $(CFLAGS)
 comm.o:
-	g++ -c ./include/comm.cpp -o ./comm.o $(CFLAGS)
+	g++ -c ./include/comm.cpp  $(CFLAGS)
 sonicsensor.o:
 	g++ -c ./include/sonicsensor.cpp -o ./sonicsensor.o $(CFLAGS)
 serial.o:

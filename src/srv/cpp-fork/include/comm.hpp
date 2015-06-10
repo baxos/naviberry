@@ -27,6 +27,7 @@ struct HEADER_PACKET
   uint8_t dataType;
   uint16_t dataId;
   uint32_t dataSize;
+  uint32_t bodyPacketSize;
 } typedef HeaderPacket;
 
 struct BODY_PACKET
@@ -45,15 +46,22 @@ private:
   static uint16_t count;                        // Static counter, used for keeping unique ID's
   static std::map<uint16_t, bool> idMap;        // Static map,used for checking whether an ID is used or not
   uint16_t dataId;                              // Unique ID for the packet, both header and body use same ID
-  uint8_t* TotalBytes;
-  uint32_t TotalBytesCount;
+  uint8_t* bodyBytes;
+  uint32_t bodyBytesCount;
+  uint8_t* headerBytes;
+  uint8_t headerBytesCount;
 public:
   NetworkPacket();                              // Constructor, description is defined in cpp file
-  ~NetworkPacket();                             // Deconstructor, free memory 
+  ~NetworkPacket();                             // Deconstructor, free memory
+
+  uint8_t* getbodyBytes(){return bodyBytes;};
+  uint32_t getbodyBytesCount() { return bodyBytesCount;};
+  uint8_t* getheaderBytes() { return headerBytes;};
+  uint8_t getheaderBytesCount() { return headerBytesCount; };
+
+ 
   void CreateTextPacket(std::string txt);       // Create a body and header packet from a text string
-  void CreateBinaryPacket(uint8_t* val);        // Create a body and header packet from raw bytes 
-  uint8_t* getTotalBytes(){return TotalBytes;};
-  uint32_t getTotalBytesCount(){return TotalBytesCount;};
+  void CreateBinaryPacket(uint8_t* val);        // Create a body and header packet from raw bytes
 };
 
 //===========================================================================================================================================================

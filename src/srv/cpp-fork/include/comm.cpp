@@ -21,14 +21,14 @@ bool debugFlag = true;
 // Static variables
 uint16_t NetworkPacket::count = 0;
 std::map<uint16_t, bool> NetworkPacket::idMap = {};
+
+
+
 // NetworkPacket constructor
 // set unique id
 // increment static counter
 NetworkPacket::NetworkPacket()
 {
-
-  
-
   // Set id upon class creation
   if (idMap.count(count) == false)
     {
@@ -56,101 +56,61 @@ NetworkPacket::NetworkPacket()
 // if data is filled, free it
 NetworkPacket::~NetworkPacket()
 {
+  print_warning("Packet deconstructor called");
   if (idMap.count(dataId) == true)
     {
       idMap.erase(dataId);
     }
 
-  if (TotalBytes != NULL)
-    delete TotalBytes;
+
+  print_warning("Trying to free memory if it's used");
+  /*
+  if (bodyBytes != NULL)
+    delete bodyBytes;
+
+  if (headerBytes != NULL)
+    delete headerBytes;
+  */
 }
 
 void NetworkPacket::CreateTextPacket(std::string txt)
 {
   // set header packet
-  hpacket.packetSize =                               // =64
-    sizeof(hpacket.packetSize) +                     //   8
-    sizeof(hpacket.dataType) +                       //   8
-    sizeof(hpacket.dataId) +                         //  16
-    sizeof(hpacket.dataSize);                        //+ 32 
+  if (debugFlag)
+    std::cout << "\t [+]Sizeof(HeaderPacket) = " << sizeof(HeaderPacket) << std::endl;
+
+  hpacket.packetSize = sizeof(HeaderPacket);         // size of this structure
   hpacket.dataType = 255;                            // 0xFF text data
   hpacket.dataId = dataId;                           // Semi unique id
+  hpacket.dataSize = txt.size();                     // just size of text string
+  hpacket.bodyPacketSize = sizeof(bpacket.packetSize) + sizeof(bpacket.dataId) + hpacket.dataSize;
 
-  // Prepare for body packet
-  auto body_size = sizeof(bpacket.packetSize) + sizeof(bpacket.dataId) +  txt.size();
-  // reserve memory
-  uint8_t* txtdata = new uint8_t[txt.size()];
-  // copy each byte
-  for (auto i = 0; i < txt.size(); i++)
-    {
-      auto c = txt[i];
-      txtdata[i] = c;
-    }
+  
 
   // set body packet
-  bpacket.packetSize = body_size;
+  bpacket.packetSize = hpacket.bodyPacketSize;
   bpacket.dataId = dataId;
-  if ( txt.size() < sizeof(bpacket.data))
+  // copy to memory to structure
+  memcpy(bpacket.data, txt.c_str(), hpacket.dataSize);
+
+  // Copy byte structure
+  if (debugFlag)
     {
-      memcpy(bpacket.data, &txtdata, sizeof(txt.size()));
+      std::cout << "Copying " << sizeof(HeaderPacket) << " bytes to other location" << std::endl;
     }
-  else
-    {
-      print_warning("Trying to create text packet, failed hence the data was too big to fit");
-    }
+  headerBytesCount = sizeof(HeaderPacket);
+  headerBytes = new uint8_t[headerBytesCount];
+  std::memcpy(headerBytes, &hpacket, headerBytesCount);
 
-
-  // Calculate TOTOAL bytes used by header and body and create a parrellel array
-  // That holds  
-  // Header
-  //   Body
-  //     Body data
-
-  auto bytes_used = 0;
-  bytes_used =     hpacket.packetSize +  bpacket.packetSize;
-  // set value to class var
-  TotalBytesCount = bytes_used;
-
-  // Prepare for copy the data
-  // reserve memory
-  TotalBytes = new uint8_t[TotalBytesCount];
-
-  // Start with header
-  auto offset = 0;
-
-  // Heaer packet
-  TotalBytes[offset]= (uint8_t) hpacket.packetSize;
-  offset += sizeof(hpacket.packetSize);
-
-  TotalBytes[offset] = (uint8_t) hpacket.dataType;
-  offset += sizeof(hpacket.packetSize);
-
-  TotalBytes[offset] = (uint16_t) hpacket.dataId;
-  offset += sizeof(hpacket.dataId);
-
-  TotalBytes[offset] = (uint32_t) hpacket.dataSize;
-  offset += sizeof(hpacket.dataSize);
-
-  // Body packet
-  TotalBytes[offset] = (uint32_t) bpacket.packetSize;
-  offset += sizeof(bpacket.packetSize);
-
-  TotalBytes[offset] = (uint16_t) bpacket.dataId;
-  offset += sizeof(bpacket.packetSize);
+  // Copy body structure
+  if (debugFlag)
+    std::cout << "Copying " << hpacket.bodyPacketSize << " bytes to body bytearray" << std::endl;
+  bodyBytesCount = hpacket.bodyPacketSize;
+  bodyBytes      = new uint8_t[bodyBytesCount];
+  std::memcpy(bodyBytes, &bpacket, bodyBytesCount);
   
-  // Loop through the last one byte array
-  for (auto n = 0; n < hpacket.dataSize; n++)
-    {
-      TotalBytes[offset] = (uint8_t) bpacket.data[n];
-      offset += sizeof(uint8_t);
-    }
 
-  if (offset != TotalBytesCount)
-    {
-      print_warning("Failed trying to create parrellel byte array, size mismatch");
-      if ( debugFlag )
-	std::cout << "[+] offset = " << offset << "\t TotalBytesCount = " << TotalBytesCount << std::endl; 
-    }
+  print_msg("Packet created");
 }
 
 void NetworkPacket::CreateBinaryPacket(uint8_t* val)
@@ -297,8 +257,11 @@ bool Network::WriteText(std::string txt)
   // Create new packet with txt as data
   packet.CreateTextPacket(txt);
 
-  // Send it to client 
-  if ( (writeRaw(packet.getTotalBytes(), packet.getTotalBytesCount())) == true)
+  // Send header
+  if (debugFlag)
+    std::cout << "Sending " << packet.getheaderBytesCount() << " bytes to client" << std::endl;
+
+  if ( (writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount())) == true)
     {
       print_msg("Successfully send data");
     }
