@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <cstdint>
+#include <map>
 #include <cstring>
 extern "C"
 {
@@ -11,13 +12,23 @@ extern "C"
 #include "comm.hpp"
 #include "naviberryio.hpp"
 
+// For debugging
+bool debugFlag = true;
+
+
 //===================================== packet class ============================================= //
 
+// Static variables
+uint16_t NetworkPacket::count = 0;
+std::map<uint16_t, bool> NetworkPacket::idMap = {};
 // NetworkPacket constructor
 // set unique id
 // increment static counter
 NetworkPacket::NetworkPacket()
 {
+
+  
+
   // Set id upon class creation
   if (idMap.count(count) == false)
     {
@@ -128,7 +139,7 @@ void NetworkPacket::CreateTextPacket(std::string txt)
   offset += sizeof(bpacket.packetSize);
   
   // Loop through the last one byte array
-  for (auto n = 0; n > hpacket.dataSize; n++)
+  for (auto n = 0; n < hpacket.dataSize; n++)
     {
       TotalBytes[offset] = (uint8_t) bpacket.data[n];
       offset += sizeof(uint8_t);
@@ -136,7 +147,9 @@ void NetworkPacket::CreateTextPacket(std::string txt)
 
   if (offset != TotalBytesCount)
     {
-      print_error("Failed trying to create parrellel byte array, size mismatch");
+      print_warning("Failed trying to create parrellel byte array, size mismatch");
+      if ( debugFlag )
+	std::cout << "[+] offset = " << offset << "\t TotalBytesCount = " << TotalBytesCount << std::endl; 
     }
 }
 
