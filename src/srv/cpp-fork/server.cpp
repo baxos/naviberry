@@ -46,6 +46,9 @@ int main()
   SerialComm serial("/dev/ttyACM0");
   SonicSensor soundSensor(PIN16, PIN18);
 
+  std::string senderServer = "SERVER";
+  std::string senderSensor = "SENSOR";
+
   // Create network class
   Network net("localhost", 1000);
 
@@ -92,19 +95,19 @@ int main()
       
       // Tell client we are waiting
       print_msg("Waiting for command..");
-      net.WriteText(comm_REPLY_WAITING);
+      net.WriteText(comm_REPLY_WAITING, senderServer);
       
       // Read text from client
       buffer = net.ReadText();
 
       // Tell we recieved data
-      net.WriteText(comm_REPLY_SUCCESS);
+      net.WriteText(comm_REPLY_SUCCESS, senderServer);
       
       // Check for recognized cmds
       if (buffer.compare("CLIENT_DISCONNECT")==0)
 	{
 	  print_warning("Recieved DISONNECT signal, closing down");
-	  net.WriteText(comm_REPLY_DISCONNECT);
+	  net.WriteText(comm_REPLY_DISCONNECT, "SERVER");
 	  prog_running = false;
 	}	  
       else if (buffer.compare("CLIENT_READ_SENSOR")==0)
@@ -118,9 +121,10 @@ int main()
 	      
 	    }
 	  //std::string 
-	  auto dist_str = std::to_string(dist);
+	  auto dist_str =  std::to_string(dist);
 	  std::cout << "TEST : " << dist_str << std::endl;
-	  net.WriteText(dist_str);
+	  
+	  net.WriteText(dist_str, "SENSOR");
 
 	}
       else if (buffer.compare("CLIENT_TEST_SENSOR")==0)

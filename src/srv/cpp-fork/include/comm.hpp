@@ -1,3 +1,5 @@
+#ifndef COMM__HPP
+#define COMM__HPP
 /*
   Filename    : comm.hpp
   Author      : J.E Bacher
@@ -28,6 +30,7 @@ struct HEADER_PACKET
   uint16_t dataId;
   uint32_t dataSize;
   uint32_t bodyPacketSize;
+  uint8_t  tag[10];
 } typedef HeaderPacket;
 
 struct BODY_PACKET
@@ -60,7 +63,7 @@ public:
   uint8_t getheaderBytesCount() { return headerBytesCount; };
 
  
-  void CreateTextPacket(std::string txt);       // Create a body and header packet from a text string
+  void CreateTextPacket(std::string txt, std::string tag);       // Create a body and header packet from a text string
   void CreateBinaryPacket(uint8_t* val);        // Create a body and header packet from raw bytes
 };
 
@@ -84,10 +87,9 @@ public:                                         // Public functions
   bool Bind();                                  // Binds the socket, returns false on error and true on success
   bool Listen();                                // Listen on the socket, returns false on error and true on success
   bool Accept();                                // Accept a connection attempt, returns false on error and true on success 
-
   bool SendTextPacket(std::string txt);
   bool SendBinaryPacket(uint8_t* data);
-  bool WriteText(std::string txt);              // Write data to a packet and send it to the client
+  void WriteText(std::string txt, std::string tag);              // Write data to a packet and send it to the client
   std::string ReadText();                       // Reads a packet of text data from the client
 };
 
@@ -123,3 +125,6 @@ const char comm_REPLY_UNKNOWN_CMD[]   = "SERVER_UNKOWN_COMMAND\n";
 */
 
 void comm_sendtxt(int socket, const char* txt);
+
+
+#endif

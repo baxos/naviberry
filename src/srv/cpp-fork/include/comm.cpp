@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <map>
 #include <cstring>
+#include <iostream>
 extern "C"
 {
 #include <sys/types.h>
@@ -64,16 +65,29 @@ NetworkPacket::~NetworkPacket()
 
 
   print_warning("Trying to free memory if it's used");
-  /*
-  if (bodyBytes != NULL)
-    delete bodyBytes;
 
-  if (headerBytes != NULL)
-    delete headerBytes;
-  */
+
+  if (bodyBytesCount > 0)
+    {
+      if (debugFlag)
+	{
+	  std::cout << "[+]Freeing " << bodyBytesCount << " bytes of memory" << std::endl;
+	}
+      delete bodyBytes;
+    }
+
+  if (headerBytesCount > 0)
+    {
+      if (debugFlag)
+	{
+	  std::cout << "[+]Freeing " << bodyBytesCount << " bytes of memory" << std::endl;
+	}
+      delete headerBytes;
+    }
+
 }
 
-void NetworkPacket::CreateTextPacket(std::string txt)
+void NetworkPacket::CreateTextPacket(std::string txt, std::string tag)
 {
   // set header packet
   if (debugFlag)
@@ -84,6 +98,18 @@ void NetworkPacket::CreateTextPacket(std::string txt)
   hpacket.dataId = dataId;                           // Semi unique id
   hpacket.dataSize = txt.size();                     // just size of text string
   hpacket.bodyPacketSize = sizeof(bpacket.packetSize) + sizeof(bpacket.dataId) + hpacket.dataSize;
+  // Set tag
+  // Check for oversize
+  if (tag.size() < 10)
+    {
+      // Zero-set memory first
+      std::memset(hpacket.tag, 0, 10);
+      std::memcpy(hpacket.tag, tag.c_str(), tag.size());
+    }
+  else
+    {
+      print_warning("Tag input was bigger than allowed,only copying 10 bytes");
+    }
 
   
 
@@ -231,6 +257,7 @@ bool Network::Accept()
 
 bool Network::writeRaw(uint8_t* val, size_t len)
 {
+  
   auto n = send(confd, val, len, 0);
   if ( n == -1 )
     {
@@ -249,13 +276,18 @@ bool Network::writeRaw(uint8_t* val, size_t len)
 // Takes a std::string as input 
 // attempts to send the data to the connected socket
 // on succes true is returned, false is returned on error
-bool Network::WriteText(std::string txt)
+void Network::WriteText(std::string txt, std::string tag)
 {
   // Create packet container
   NetworkPacket packet;
 
   // Create new packet with txt as data
-  packet.CreateTextPacket(txt);
+  packet.CreateTextPacket(txt, tag);
+
+  // Send signal
+  uint8_t* signal = new uint8_t[4];
+  std::memcpy(signal, "NAVI", 4);
+  writeRaw(signal, 4);
 
   // Send header
   if (debugFlag)
@@ -263,8 +295,29 @@ bool Network::WriteText(std::string txt)
 
   if ( (writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount())) == true)
     {
-      print_msg("Successfully send data");
+      print_msg("Successfully send header packet");
     }
+  else
+    {
+      print_warning("Failed to send header packet");
+    }
+
+  // Send body packet
+  if (debugFlag)
+    std::cout << "Sending " << packet.getbodyBytesCount() << " bytes to client" << std::endl;
+
+  // Send signal
+  writeRaw(signal, 4);
+
+  
+  if (writeRaw(packet.getbodyBytes(), packet.getbodyBytesCount()) == true)
+    {
+      print_msg("Sucessfully send body packet");
+    }
+    else
+      {
+	print_warning("Failed to send body packet");
+      }
 
   
 
@@ -297,8 +350,8 @@ bool Network::WriteText(std::string txt)
 bool Network::SendTextPacket(std::string txt)
 {
 
-  NetworkPacket packet;
-  packet.CreateTextPacket(txt);
+  // NetworkPacket packet;
+  //  packet.CreateTextPacket(txt);
   
   // write header
 
