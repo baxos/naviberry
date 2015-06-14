@@ -19,9 +19,9 @@ private:
 
   // For scheduling
   // Counters 
-  const int16_t hardwareCounterMax = 100;
-  const int16_t sensorCounterMax = 200;
-  const int16_t networkCounterMax = 300;
+  static const int16_t hardwareCounterMax = 100;
+  static const int16_t sensorCounterMax = 200;
+  static const int16_t networkCounterMax = 300;
   int16_t hardwareCounter;
   int16_t sensorCounter;
   int16_t networkCounter;

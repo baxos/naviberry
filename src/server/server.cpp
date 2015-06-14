@@ -9,19 +9,20 @@
 #include <algorithm>
 #include <chrono>
 #include <thread>
+#include <string>
 extern "C"
 {
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "./include/bcm2835.h"
 }
-#include <string>
 #include "./include/comm.hpp"
 #include "./include/naviberryio.hpp"
 #include "./include/bcmwrapper.hpp"
 #include "./include/motordriver.hpp"
 #include "./include/serial.hpp"
 #include "./include/sonicsensor.hpp"
+#include "./include/scheduler.hpp"
 
 // change please!!!!!!!!!!!!!
 void rob_sleep(int x)
@@ -43,9 +44,11 @@ int main()
   // Create motor class
   DC_Motor motorA(PIN11, PIN13, PIN15);  
   DC_Motor motorB(PIN19, PIN21, PIN23);
-  SerialComm serial("/dev/ttyACM0");
+  //  SerialComm serial("/dev/ttyACM0");
+  //  We are not using serial communication anyway..
   SonicSensor soundSensor(PIN16, PIN18);
-
+  Scheduler sched;
+  
   std::string senderServer = "SERVER";
   std::string senderSensor = "SENSOR";
 
@@ -81,6 +84,7 @@ int main()
     }
 
 
+
   // Keep loop-on as long as client wants
   auto prog_running = true;
   // Make a string buffer, because all comm is as strings
@@ -89,6 +93,9 @@ int main()
 
   while (prog_running)
     {
+
+
+
       // Zero set buffer for every run..
       // memset(buffer,0, sizeof(buffer));
       buffer = "";
@@ -163,13 +170,6 @@ int main()
 	{
 	  // Stop motor
 	  motorA.Stop();
-	}
-      else if (buffer.compare("CLIENT_READ_SENSOR")==0)
-	{
-	  // Ask arduino to print out reading
-	  serial.Write("READ_SENSOR");
-	  std::string test = serial.Read("");
-	  print_warning(test);
 	}
       else if(buffer.compare("CLIENT_MOTORA_FORWARD")==0)
 	{

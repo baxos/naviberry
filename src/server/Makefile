@@ -1,31 +1,39 @@
 # test
 
 # Name of binary executable 
-outputname = Test
+outputname = Naviberry
 # the object files used
-objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o serial.o sonicsensor.o
+objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o serial.o sonicsensor.o scheduler.o
 # compile flags
 CFLAGS = -lbcm2835 -std=c++0x -ggdb # -Werror -Wall
 
 
-Test: $(objects)
+Naviberry: $(objects)
 	g++ -o $(outputname) $(objects) $(CFLAGS) 
 	@echo Binary executable : $(outputname)
-motordriver.o:
+motordriver.o:	./include/motordriver.cpp ./include/motordriver.hpp
 	g++ -c ./include/motordriver.cpp -o ./motordriver.o $(CFLAGS)
 
-bcmwrapper.o:
-	g++ -c ./include/bcmwrapper.cpp -o ./bcmwrapper.o $(CFLAGS)
-naviberryio.o:
-	g++ -c ./include/naviberryio.cpp -o ./naviberryio.o $(CFLAGS)
-server.o:
-	g++ -c ./server.cpp -o ./server.o $(CFLAGS)
-comm.o:
+bcmwrapper.o:	./include/bcmwrapper.cpp ./include/bcmwrapper.hpp
+	g++ -c ./include/bcmwrapper.cpp  $(CFLAGS)
+
+naviberryio.o:	./include/naviberryio.cpp ./include/naviberryio.hpp
+	g++ -c ./include/naviberryio.cpp $(CFLAGS)
+
+server.o:	./server.cpp
+	g++ -c ./server.cpp  $(CFLAGS)
+
+comm.o:	./include/comm.cpp ./include/comm.hpp
 	g++ -c ./include/comm.cpp  $(CFLAGS)
+
 sonicsensor.o:
-	g++ -c ./include/sonicsensor.cpp -o ./sonicsensor.o $(CFLAGS)
+	g++ -c ./include/sonicsensor.cpp  $(CFLAGS)
+
 serial.o:
-	g++ -c ./include/serial.cpp -o ./serial.o $(CFLAGS)
+	g++ -c ./include/serial.cpp  $(CFLAGS)
+
+scheduler.o:	./include/scheduler.cpp ./include/scheduler.hpp
+	g++ -c ./include/scheduler.cpp $(CFLAGS)
 
 .PHONY : clean
 clean : 

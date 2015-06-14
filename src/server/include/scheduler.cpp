@@ -1,6 +1,6 @@
 #include <chrono>
 #include "./scheduler.hpp"
-
+#include "./naviberryio.hpp"
 
 
 
@@ -9,10 +9,13 @@
 // =================================== Scheduler Class ================================== //
 
 
+
 // Scheduler Constructor function
 // Initialize class variables
 Scheduler::Scheduler()
 {
+  print_msg("Scheduler() constructor called");
+
   // Set counters
   hardwareCounter = hardwareCounterMax;
   sensorCounter   = sensorCounterMax;
@@ -28,6 +31,11 @@ Scheduler::Scheduler()
   total_msec = 0;
   total_sec  = 0;
   count_msec = 0;
+}
+
+Scheduler::~Scheduler()
+{
+  print_msg("~Scheduler() deconstructor called");
 }
 
 // Scheduler Update void function
