@@ -26,7 +26,7 @@ server.o:	./server.cpp
 comm.o:	./include/comm.cpp ./include/comm.hpp
 	g++ -c ./include/comm.cpp  $(CFLAGS)
 
-sonicsensor.o:
+sonicsensor.o:	./include/sonicsensor.cpp ./include/sonicsensor.hpp
 	g++ -c ./include/sonicsensor.cpp  $(CFLAGS)
 
 serial.o:

@@ -27,3 +27,4 @@ namespace Color {
 void print_msg(std::string msg);
 void print_warning(std::string warning);
 void print_error(std::string error);
+void print_str(std::stringstream& sstream);

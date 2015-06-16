@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <string>
 #include "naviberryio.hpp"
 
@@ -10,6 +11,15 @@ void print_msg(std::string msg)
   Color::Modifier TXT_GREEN (Color::FG_GREEN);
   Color::Modifier TXT_DEF (Color::FG_DEFAULT);
   std::cout << TXT_GREEN << "[+] " << msg << TXT_DEF <<std::endl;
+}
+
+// print_str
+// Prints out string formatted via a stringstream
+void print_str(std::stringstream& sstream)
+{
+  Color::Modifier TXT_GREEN (Color::FG_GREEN);
+  Color::Modifier TXT_DEF   (Color::FG_DEFAULT);
+  std::cout << TXT_GREEN << "[+]" << sstream.str() << TXT_DEF << std::endl;
 }
 
 // print_warning

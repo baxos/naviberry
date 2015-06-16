@@ -12,6 +12,8 @@
 #include "./sonicsensor.hpp"
 #include "./bcmwrapper.hpp"
 
+extern bool debugFlag;
+
 SonicSensor::SonicSensor(uint8_t _trig, uint8_t _echo)
 {
   // Set class pins
@@ -49,53 +51,78 @@ void SonicSensor::Pulse()
 
 int SonicSensor::ReadDistance()
 {
-  auto start_total = std::chrono::high_resolution_clock::now();
-  // Start
-  auto echo_in = LOW;
+  auto bad_reads = 0;
+  auto average = 0;
+  const auto reads = 5;
 
-  // Wait for pin to change state
-  while (echo_in == LOW)
+
+  for (auto n = 0; n < reads; n++)
     {
-      // Read
-      echo_in = GPIO_read(PIN_ECHO);
+      Pulse();
+      
+      auto start_total = std::chrono::high_resolution_clock::now();
+      // Start
+      auto echo_in = LOW;
+      
+      // Wait for pin to change state
+      while (echo_in == LOW)
+	{
+	  // Read
+	  echo_in = GPIO_read(PIN_ECHO);
+	}
+      
+      // Now we can start timing
+      auto start_echo = std::chrono::high_resolution_clock::now();
+      
+      // Wait for pin to change state to low again
+      while (echo_in == HIGH)
+	{
+	  // Read
+	  echo_in = GPIO_read(PIN_ECHO);
+	}
+      
+      auto elapsed_echo = std::chrono::high_resolution_clock::now() - start_echo;
+      // auto tdiff = elapsed_echo - start_echo;
+      
+      // Find difference on timings
+      long long time_used = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_echo).count();
+      
+      // convert time to distance
+      // and return distance in cm
+      long long distance = time_used/29/2;
+      
+      
+      
+      // If bad reading
+      // Set bad read flag and return number BELOW zero
+      if (distance < 0 || distance > 300)
+	{
+	  print_warning("Sonic sensor BAD read!");
+	  bad_read = true;
+	  bad_reads++;
+	}
+      else
+	{
+	  if (debugFlag)
+	    {
+	      std::cout << "TIME READ : " << time_used << " microSeconds \t distance : " << distance << " cm" << std::endl;
+	    }
+	  bad_read = false;
+
+	  average += (int) distance;
+
+	}
     }
 
-  // Now we can start timing
-  auto start_echo = std::chrono::high_resolution_clock::now();
-
-  // Wait for pin to change state to low again
-  while (echo_in == HIGH)
+  if ((bad_reads > (reads/2)))
     {
-      // Read
-      echo_in = GPIO_read(PIN_ECHO);
-    }
-
-  auto elapsed_echo = std::chrono::high_resolution_clock::now() - start_echo;
-  // auto tdiff = elapsed_echo - start_echo;
-
-  // Find difference on timings
-  long long time_used = std::chrono::duration_cast<std::chrono::microseconds>(elapsed_echo).count();
-
-  // convert time to distance
-  // and return distance in cm
-  long long distance = time_used/29/2;
-  
-
-
-  // If bad reading
-  // Set bad read flag and return number BELOW zero
-  if (distance < 0 || distance > 300)
-    {
-      print_warning("Sonic sensor BAD read!");
-      bad_read = true;
       return -1;
     }
   else
     {
-      std::cout << "TIME READ : " << time_used << " microSeconds \t distance : " << distance << " cm" << std::endl;
-      bad_read = false;
-      return (int) distance;
+      return average / (reads-bad_reads);
     }
+
 }
 
 

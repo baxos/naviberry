@@ -10,6 +10,7 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#include <list>
 extern "C"
 {
 #include <sys/types.h>
@@ -89,198 +90,231 @@ int main()
   auto prog_running = true;
   // Make a string buffer, because all comm is as strings
   std::string buffer;
-
+  std::string dist_reading = "-1";
 
   while (prog_running)
     {
+      sched.Update();
 
 
-
-      // Zero set buffer for every run..
-      // memset(buffer,0, sizeof(buffer));
-      buffer = "";
-      
-      // Tell client we are waiting
-      print_msg("Waiting for command..");
-      net.WriteText(comm_REPLY_WAITING, senderServer);
-      
-      // Read text from client
-      buffer = net.ReadText();
-
-      // Tell we recieved data
-      net.WriteText(comm_REPLY_SUCCESS, senderServer);
-      
-      // Check for recognized cmds
-      if (buffer.compare("CLIENT_DISCONNECT")==0)
+      if (sched.getHardwareFlag())
 	{
-	  print_warning("Recieved DISONNECT signal, closing down");
-	  net.WriteText(comm_REPLY_DISCONNECT, "SERVER");
-	  prog_running = false;
-	}	  
-      else if (buffer.compare("CLIENT_READ_SENSOR")==0)
+
+
+
+
+	  sched.resetHardwareFlag();
+	}
+      if (sched.getSensorFlag())
 	{
-	  print_warning("Reading from sensor!!!");
-	  soundSensor.Pulse();
+	  // Check sensor distance
+	  // soundSensor.Pulse();
 	  auto dist = soundSensor.ReadDistance();
 	  if (dist == -1)
 	    {
-	      // Error reading
+	      // Error read
+	    }
+	  else
+	    {
+	      //
+	    }
+
+	  dist_reading = std::to_string(dist);
+
+	  sched.resetSensorFlag();
+	}
+      if (sched.getNetworkFlag())
+	{      
+	  
+
+	  // Zero set buffer for every run..
+	  // memset(buffer,0, sizeof(buffer));
+	  buffer = "";
+	  
+	  // Tell client we are waiting
+	  print_msg("Waiting for command..");
+	  net.WriteText(comm_REPLY_WAITING, senderServer);
+	  
+
+	  // Read from network, to network class buffer
+	  net.Read();
+
+	  // Check for packets
+	  net.CheckForPackets();
+
+	  // Check for combinations
+	  net.CheckForCombinations();
+
+
+
+	  // Parse network textpacket queue
+	  std::list<TextPacket> queue = net.getTextQueue();
+	  for (auto it = queue.begin(); it!=queue.end(); it++)
+	    {
+	      std::cout << "Checking ID : " << it->dataId << "\t TAG : " << it->tag << std::endl;
+	      buffer = it->value;
+	      if (buffer == "")
+		break;
+	      if (buffer.compare("CLIENT_DISCONNECT")==0)
+		{
+		  print_warning("Recieved DISONNECT signal, closing down");
+		  net.WriteText(comm_REPLY_DISCONNECT, senderServer);
+		  prog_running = false;
+		}	  
+	      else if (buffer.compare("CLIENT_READ_SENSOR")==0)
+		{
+		  std::cout << "Last distance measurement : " << dist_reading << std::endl;	      
+		  net.WriteText(dist_reading, senderSensor);
+		  
+		}
+	      else if (buffer.compare("CLIENT_TEST_SENSOR")==0)
+		{
+		  auto dist = 200;
+		  while (dist > 30)
+		    {
+		      // Drive forward
+		      // Wait
+		      // Stop
+		      // Measure
+		      // Repeat
+		      
+		      motorA.Start();
+		      motorB.Start();
+		      rob_sleep(100);
+		      motorA.Stop();
+		      motorB.Stop();
+		      rob_sleep(10);
+		      
+		      soundSensor.Pulse();
+		      dist = soundSensor.ReadDistance();
+		    }
+		  
+		  
+		}
 	      
-	    }
-	  //std::string 
-	  auto dist_str =  std::to_string(dist);
-	  std::cout << "TEST : " << dist_str << std::endl;
-	  
-	  net.WriteText(dist_str, "SENSOR");
-
-	}
-      else if (buffer.compare("CLIENT_TEST_SENSOR")==0)
-	{
-	  auto dist = 200;
-	  while (dist > 30)
-	    {
-	      // Drive forward
-	      // Wait
-	      // Stop
-	      // Measure
-	      // Repeat
-
-	      motorA.Start();
-	      motorB.Start();
-	      rob_sleep(100);
-	      motorA.Stop();
-	      motorB.Stop();
-	      rob_sleep(10);
-
-	      soundSensor.Pulse();
-	      dist = soundSensor.ReadDistance();
-	    }
-
-	  
-	}
-
-      // ============================= MOTOR A ====================================
-      else if(buffer.compare("CLIENT_MOTORA_START")==0)
-	{
-	  // Start motor
-	  print_msg("STARTING MOTOR A");
-	  motorA.Start();
-	}
-      else if(buffer.compare("CLIENT_MOTORA_STOP")==0)
-	{
-	  // Stop motor
-	  motorA.Stop();
-	}
-      else if(buffer.compare("CLIENT_MOTORA_FORWARD")==0)
-	{
-	  motorA.setDirection(0);
-	}
-      else if (buffer.compare("CLIENT_MOTORA_BACKWARD")==0)
-	{
-	  motorA.setDirection(1);
-	}
-      // ============================ MOTOR B ===============================================
-      else if (buffer.compare("CLIENT_MOTORB_START")==0)
-	{
-	  print_msg("Motor B starting");
-	  motorB.Start();
-	}
-      else if (buffer.compare("CLIENT_MOTORB_STOP")==0)
-	{
-	  print_msg("Motor B stopping");
-	  motorB.Stop();
-	}
-      // ============================== Both motors ======================================
-      else if (buffer.compare("CLIENT_MOTORS_START")==0)
-	{
-	  print_msg("Starting both motors..");
-	  motorA.Start();
-	  motorB.Start();
-	}
-      else if (buffer.compare("CLIENT_MOTORS_STOP")==0)
-	{
-	  print_msg("Stopping both motors..");
-	  motorA.Stop();
-	  motorB.Stop();
-	}
-      else if (buffer.compare("CLIENT_MOTORS_FORWARD")==0)
-	{
-	  motorA.setDirection(0);
-	  motorB.setDirection(0);
-	}
-      else if (buffer.compare("CLIENT_MOTORS_BACKWARD")==0)
-	{
-	  motorA.setDirection(1);
-	  motorB.setDirection(1);
-	}
-      else if (buffer.compare("CLIENT_MOTORS_TURNLEFT")==0)
-	{
-	  const auto sleep_time = 95;
-	  auto repeats = 3;
-
-	  print_msg("Turning left");
-	  // Save state of motors
-	  auto mota_dir = motorA.getDirection();
-	  auto motb_dir = motorB.getDirection();
-	  // Change direcions of motors
-	  motorA.setDirection(1);
-	  motorB.setDirection(0);
-	  
-	  while (repeats > 0)
-	    {
-	      // Fire them up!
-	      motorA.Start();
-	      motorB.Start();
-	      // Wait x time, then halt them!
-	      rob_sleep(sleep_time);
-	      motorA.Stop();
-	      motorB.Stop();
-	      rob_sleep(sleep_time);
-	      repeats--;
-	    }
-
-	  // Set motor state back to origin
-	  motorA.setDirection(mota_dir);
-	  motorB.setDirection(motb_dir);
-	}
-      else if (buffer.compare("CLIENT_MOTORS_TURNRIGHT")==0)
-	{
-	  const auto sleep_time = 95;
-	  auto repeats = 3;
-	  print_msg("Turning right");
-	  // Save state of motors
-	  auto mota_dir = motorA.getDirection();
-	  auto motb_dir = motorB.getDirection();
-	  // Change directions
-	  motorA.setDirection(0);
-	  motorB.setDirection(1);
-	  // Fire them up
-	  while ( repeats > 0)
-	    {
-	      motorA.Start();
-	      motorB.Start();
-	      // Wait x ms and halt
-	      rob_sleep(sleep_time);
-	      motorA.Stop();
-	      motorB.Stop();
-	      rob_sleep(sleep_time);
-	      repeats--;
-	    }
-
-	  // Set motor stae back to origin
-	  motorA.setDirection(mota_dir);
-	  motorB.setDirection(motb_dir);
-	}
-      else
-	{
-	  print_warning("Unknown message recived :");
-	  print_warning(buffer);
-	 
-	}
-      
-
+	      // ============================= MOTOR A ====================================
+	      else if(buffer.compare("CLIENT_MOTORA_START")==0)
+		{
+		  // Start motor
+		  print_msg("STARTING MOTOR A");
+		  motorA.Start();
+		}
+	      else if(buffer.compare("CLIENT_MOTORA_STOP")==0)
+		{
+		  // Stop motor
+		  motorA.Stop();
+		}
+	      else if(buffer.compare("CLIENT_MOTORA_FORWARD")==0)
+		{
+		  motorA.setDirection(0);
+		}
+	      else if (buffer.compare("CLIENT_MOTORA_BACKWARD")==0)
+		{
+		  motorA.setDirection(1);
+		}
+	      // ============================ MOTOR B ===============================================
+	      else if (buffer.compare("CLIENT_MOTORB_START")==0)
+		{
+		  print_msg("Motor B starting");
+		  motorB.Start();
+		}
+	      else if (buffer.compare("CLIENT_MOTORB_STOP")==0)
+		{
+		  print_msg("Motor B stopping");
+		  motorB.Stop();
+		}
+	      // ============================== Both motors ======================================
+	      else if (buffer.compare("CLIENT_MOTORS_START")==0)
+		{
+		  print_msg("Starting both motors..");
+		  motorA.Start();
+		  motorB.Start();
+		}
+	      else if (buffer.compare("CLIENT_MOTORS_STOP")==0)
+		{
+		  print_msg("Stopping both motors..");
+		  motorA.Stop();
+		  motorB.Stop();
+		}
+	      else if (buffer.compare("CLIENT_MOTORS_FORWARD")==0)
+		{
+		  motorA.setDirection(0);
+		  motorB.setDirection(0);
+		}
+	      else if (buffer.compare("CLIENT_MOTORS_BACKWARD")==0)
+		{
+		  motorA.setDirection(1);
+		  motorB.setDirection(1);
+		}
+	      else if (buffer.compare("CLIENT_MOTORS_TURNLEFT")==0)
+		{
+		  const auto sleep_time = 95;
+		  auto repeats = 3;
+		  
+		  print_msg("Turning left");
+		  // Save state of motors
+		  auto mota_dir = motorA.getDirection();
+		  auto motb_dir = motorB.getDirection();
+		  // Change direcions of motors
+		  motorA.setDirection(1);
+		  motorB.setDirection(0);
+		  
+		  while (repeats > 0)
+		    {
+		      // Fire them up!
+		      motorA.Start();
+		      motorB.Start();
+		      // Wait x time, then halt them!
+		      rob_sleep(sleep_time);
+		      motorA.Stop();
+		      motorB.Stop();
+		      rob_sleep(sleep_time);
+		      repeats--;
+		    }
+		  
+		  // Set motor state back to origin
+		  motorA.setDirection(mota_dir);
+		  motorB.setDirection(motb_dir);
+		}
+	      else if (buffer.compare("CLIENT_MOTORS_TURNRIGHT")==0)
+		{
+		  const auto sleep_time = 95;
+		  auto repeats = 3;
+		  print_msg("Turning right");
+		  // Save state of motors
+		  auto mota_dir = motorA.getDirection();
+		  auto motb_dir = motorB.getDirection();
+		  // Change directions
+		  motorA.setDirection(0);
+		  motorB.setDirection(1);
+		  // Fire them up
+		  while ( repeats > 0)
+		    {
+		      motorA.Start();
+		      motorB.Start();
+		      // Wait x ms and halt
+		      rob_sleep(sleep_time);
+		      motorA.Stop();
+		      motorB.Stop();
+		      rob_sleep(sleep_time);
+		      repeats--;
+		    }
+		  
+		  // Set motor stae back to origin
+		  motorA.setDirection(mota_dir);
+		  motorB.setDirection(motb_dir);
+		}
+	      else
+		{
+		  print_warning("Unknown message recived :");
+		  print_warning(buffer);    
+		}
+	    }  
+	  // Reset flag
+	  sched.resetNetworkFlag();
+	}     
     }
-
+  
   // just exit
   return EXIT_SUCCESS;
 }

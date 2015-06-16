@@ -9,6 +9,7 @@
 #include <string>
 #include <cstdint>
 #include <map>
+#include <list>
 extern "C"
 {
 #include <sys/types.h>
@@ -20,8 +21,7 @@ extern "C"
 
 //===================================================================== network packet ================================== //
 // Network packet structs and class
-// this is used to by the network class to send data between client<->server
-
+// this is used to by the network class to send data between client<->se
 
 struct HEADER_PACKET
 {
@@ -40,6 +40,18 @@ struct BODY_PACKET
   uint8_t data[1024];
 } typedef BodyPacket;
 
+class TextPacket
+{
+public:
+  TextPacket();
+  std::string tag;
+  std::string value;
+  uint16_t dataId;
+
+  void setValue(std::string _val) { value = _val;};
+  void setTag(std::string _tag) { tag = _tag;};
+  void setId(uint16_t _id) { dataId = _id;};
+};
 
 class NetworkPacket
 {
@@ -78,6 +90,12 @@ private:
   uint16_t port;                                // Port number
   uint8_t sockfd;                               // Socket file descriptor for listen
   uint8_t confd;                                // Socket file descriptor connected to client
+  uint32_t buffer_size;
+  uint8_t* buffer;
+  uint32_t buffer_offset;
+  std::list<HeaderPacket> openHeaderPackets;
+  std::list<BodyPacket> openBodyPackets;
+  std::list<TextPacket> TextPacketQueue;
   struct sockaddr_in server_addr;               // Structure for keeping information about the adress port etc.
   struct sockaddr_in client_addr;               // Saeme
   bool writeRaw(uint8_t* val, size_t len);
@@ -85,26 +103,21 @@ public:                                         // Public functions
   Network(std::string _host, uint16_t _port);   // Constructor takes in hostname and port number as arguments as it constructs the class
   bool Create();                                // Initialize the class , returns false on error and true on success
   bool Bind();                                  // Binds the socket, returns false on error and true on success
-  bool Listen();                                // Listen on the socket, returns false on error and true on success
+  bool Listen();                                // Listen on the socket, returns false on error and true on successs
   bool Accept();                                // Accept a connection attempt, returns false on error and true on success 
   bool SendTextPacket(std::string txt);
   bool SendBinaryPacket(uint8_t* data);
+  void setBufferSize(uint32_t size);
   void WriteText(std::string txt, std::string tag);              // Write data to a packet and send it to the client
-  std::string ReadText();                       // Reads a packet of text data from the client
+  void Read();                       // Reads a packet of text data from the client
+  std::list<TextPacket> getTextQueue(){ return TextPacketQueue;};
+  void CheckForCombinations();
+  void CheckForPackets();
 };
 
 
 // ===================================================================================================================================================== //
 // Cosntant strings for server communication
-
-/*
-  CLIENT MESSAGES
-*/
-const char comm_CLIENT_START[] = "CLIENT_START\n";
-const char comm_CLIENT_PING[]  = "CLIENT_PING\n";
-const char comm_CLIENT_DISCONNECT[] = "CLIENT_DISCONNECT\n";
-const char comm_CLIENT_STATUS[]     = "CLIENT_STATUS\n";
-
 /*
  REPLY MESSAGES
 */
@@ -119,12 +132,6 @@ const char comm_REPLY_UNKNOWN_CMD[]   = "SERVER_UNKOWN_COMMAND\n";
 
 //
 //========================================================================================================================================================= //
-
-/*
-  PUBLIC FUNCTIONS
-*/
-
-void comm_sendtxt(int socket, const char* txt);
 
 
 #endif

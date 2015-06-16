@@ -1,9 +1,10 @@
-
 #include <iostream>
+#include <sstream>
 #include <cstdint>
 #include <map>
 #include <cstring>
 #include <iostream>
+#include <list>
 extern "C"
 {
 #include <sys/types.h>
@@ -14,7 +15,16 @@ extern "C"
 #include "naviberryio.hpp"
 
 // For debugging
-bool debugFlag = true;
+bool debugFlag = false;
+
+
+// ===================================== TextPacket ==================== //
+TextPacket::TextPacket()
+{
+  tag ="";
+  value ="";
+  dataId = 0;
+}
 
 
 //===================================== packet class ============================================= //
@@ -64,14 +74,12 @@ NetworkPacket::~NetworkPacket()
     }
 
 
-  print_warning("Trying to free memory if it's used");
-
 
   if (bodyBytesCount > 0)
     {
       if (debugFlag)
 	{
-	  std::cout << "[+]Freeing " << bodyBytesCount << " bytes of memory" << std::endl;
+	  // std::cout << "[+]Freeing " << bodyBytesCount << " bytes of memory" << std::endl;
 	}
       delete bodyBytes;
     }
@@ -80,7 +88,7 @@ NetworkPacket::~NetworkPacket()
     {
       if (debugFlag)
 	{
-	  std::cout << "[+]Freeing " << bodyBytesCount << " bytes of memory" << std::endl;
+	  //  print_str("Freeing " << headerBytesCount << " bytes of memory");
 	}
       delete headerBytes;
     }
@@ -90,9 +98,6 @@ NetworkPacket::~NetworkPacket()
 void NetworkPacket::CreateTextPacket(std::string txt, std::string tag)
 {
   // set header packet
-  if (debugFlag)
-    std::cout << "\t [+]Sizeof(HeaderPacket) = " << sizeof(HeaderPacket) << std::endl;
-
   hpacket.packetSize = sizeof(HeaderPacket);         // size of this structure
   hpacket.dataType = 255;                            // 0xFF text data
   hpacket.dataId = dataId;                           // Semi unique id
@@ -122,7 +127,7 @@ void NetworkPacket::CreateTextPacket(std::string txt, std::string tag)
   // Copy byte structure
   if (debugFlag)
     {
-      std::cout << "Copying " << sizeof(HeaderPacket) << " bytes to other location" << std::endl;
+      // std::cout << "Copying " << sizeof(HeaderPacket) << " bytes to other location" << std::endl;
     }
   headerBytesCount = sizeof(HeaderPacket);
   headerBytes = new uint8_t[headerBytesCount];
@@ -130,7 +135,9 @@ void NetworkPacket::CreateTextPacket(std::string txt, std::string tag)
 
   // Copy body structure
   if (debugFlag)
-    std::cout << "Copying " << hpacket.bodyPacketSize << " bytes to body bytearray" << std::endl;
+    {
+      // std::cout << "Copying " << hpacket.bodyPacketSize << " bytes to body bytearray" << std::endl;
+    }
   bodyBytesCount = hpacket.bodyPacketSize;
   bodyBytes      = new uint8_t[bodyBytesCount];
   std::memcpy(bodyBytes, &bpacket, bodyBytesCount);
@@ -157,6 +164,13 @@ Network::Network(std::string _host, uint16_t _port)
 {
   print_msg("Network constructor() called");
   print_msg("Set class variables..");
+  print_msg("Set standard buffer size to 4096");
+
+  buffer = NULL;
+  buffer_size = 4096;
+  buffer_offset = 0;
+  setBufferSize(buffer_size);
+
   // Set class variables
   hostname = _host;
   port = _port;
@@ -167,6 +181,27 @@ Network::Network(std::string _host, uint16_t _port)
 }
 
 
+// Network setBufferSize void function
+// Takes unsigned int as input
+// to specify buffer size
+// and (re)allocate
+void Network::setBufferSize(uint32_t size)
+{
+  auto old_size = buffer_size;
+  buffer_size = size;
+  if ( buffer != NULL)
+    {
+      // Create new memory
+      uint8_t* tmp = new uint8_t[size];
+      std::memcpy(tmp, buffer, old_size);
+      delete buffer;
+      buffer = tmp;
+    }
+  else
+    {
+      buffer = new uint8_t[size];
+    }
+}
 
 // Network Create bool function
 // Attempts to create a socket
@@ -280,6 +315,7 @@ void Network::WriteText(std::string txt, std::string tag)
 {
   // Create packet container
   NetworkPacket packet;
+  auto error_happened = false;
 
   // Create new packet with txt as data
   packet.CreateTextPacket(txt, tag);
@@ -291,59 +327,47 @@ void Network::WriteText(std::string txt, std::string tag)
 
   // Send header
   if (debugFlag)
-    std::cout << "Sending " << packet.getheaderBytesCount() << " bytes to client" << std::endl;
+    {
+    std::cout << "[+]Sending " << packet.getheaderBytesCount() << " bytes to client" << std::endl;
+    }
 
   if ( (writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount())) == true)
     {
-      print_msg("Successfully send header packet");
+      //      print_msg("Successfully send header packet");
     }
   else
     {
       print_warning("Failed to send header packet");
+      error_happened = true;
     }
 
   // Send body packet
   if (debugFlag)
-    std::cout << "Sending " << packet.getbodyBytesCount() << " bytes to client" << std::endl;
-
+    {
+      std::cout << "[+]Sending " << packet.getbodyBytesCount() << " bytes to client" << std::endl;
+    }
   // Send signal
   writeRaw(signal, 4);
 
   
   if (writeRaw(packet.getbodyBytes(), packet.getbodyBytesCount()) == true)
     {
-      print_msg("Sucessfully send body packet");
-    }
-    else
-      {
-	print_warning("Failed to send body packet");
-      }
-
-  
-
-
-
-  /* Experiments with code above, this is the original code 
-  auto n = 0;
-  if ( (n = send(confd, txt.c_str(), txt.size(), 0)) == -1)
-    {
-      // Error
-      print_error("Error happened while trying to send data");
-      return false;
+      // print_msg("Sucessfully send body packet");
     }
   else
     {
-      if (n == txt.size())
-	{
-	  print_msg("Successfully send following data");
-	  print_msg(txt);
-	  // Success
-	  return true;
-	}
-      return false;
+      print_warning("Failed to send body packet");
+      error_happened = true;
     }
 
-*/
+  if ( error_happened == false)
+    {
+      print_msg("Successfully send package");
+    }
+  else
+    {
+      print_warning("Failed to send package");
+    }
 }
 
 
@@ -364,19 +388,154 @@ bool Network::SendBinaryPacket(uint8_t* data)
 {
 
 }
-
-// Network ReadText string function
-// It attempts to read a block of text
-// from the connected socket
-// on success the text is returned, on failure empty string is returned.
-std::string Network::ReadText(void)
+// Netowrk CheckForCombinations void function
+// Looks for header and body packets matches
+// If it finds them it will remove them from open list
+// and add them to network queue
+void Network::CheckForCombinations()
 {
-  auto n = 0;
-  const auto buff_size = 1024; 
-  char buffer[buff_size] = {};
-  std::string str_buffer = "";
+  // ita = iterator for header packets
+  // itb = iterator for body packets
+  for (auto ita = openHeaderPackets.begin(); ita != openHeaderPackets.end(); ita++)
+    {
+      for (auto itb = openBodyPackets.begin(); itb != openBodyPackets.end(); itb++)
+	{
+	  if (ita->dataId == itb->dataId)
+	    {
+	      // We got match!
+	      TextPacket tp;
+	      if (ita->dataType = 0xFF)
+		{
+		  std::string strbuffer ="";
+		  // Text packet
+		  for (auto n = 0;n < ita->dataSize; n++)
+		    {
+		      strbuffer += (char) itb->data[n];		      
+		    }
+		  // Set value
+		  tp.setValue(strbuffer);
+	
+		  strbuffer = "";
+		  for (auto n = 0; n<10;n++)
+		    {
+		      strbuffer += ita->tag[n];
+		    } 
+		  // Set tag
+		  tp.setTag(strbuffer);
 
-  if ( (n = recv(confd, &buffer, buff_size, 0)) == -1)
+		  // Set id
+		  tp.setId(ita->dataId);
+	
+		  // Add to list
+		  TextPacketQueue.push_back(tp);
+
+
+		  print_msg("Removing elements from open list");
+		  // Remove elements from list
+		  ita = openHeaderPackets.erase(ita);
+		  itb = openBodyPackets.erase(itb);
+		}
+
+	      
+	      
+	    }
+	}
+    }
+}
+
+
+// Network CheckForPackets void function
+// It searches through the class buffer
+// for 4 bytes N,A,V,I
+// After those 4 bytes either an body or header packet comes
+// If function finds any packets, it will add them to open list
+// and zero set the section in the class buffer
+void Network::CheckForPackets()
+{
+      auto pack_offset        = 0;
+      auto pack_offset_start  = 0;
+      bool packet_found       = false;
+      
+
+      for (auto n=0; n <= buffer_offset; n++)
+	{
+	  // check for overflow
+	  if ( (n + 4 ) > buffer_size)
+	    {
+	      break;
+	    }
+
+      if ( buffer[n] == 'N' && buffer[n+1] == 'A' && buffer[n+2] == 'V' && buffer[n+3] == 'I')
+	{
+	  // Found packet
+	  std::cout << "Signature bytes found on offset " << n << std::endl;
+	  packet_found      = true;
+	  pack_offset       = n+4;
+	  pack_offset_start = pack_offset;
+	  break;
+	}
+    }
+
+  if ( ((packet_found) && buffer[pack_offset] == sizeof(HeaderPacket)))
+    {
+      // If n+4th byte is equal to the sizeof headerstructure
+      // its a header packet found
+      // Construct a header packet structure
+      // And add it to the open list
+      HeaderPacket hpacket;
+      std::memcpy(&hpacket, &buffer[pack_offset], sizeof(HeaderPacket));
+      std::cout <<"[+]PACKET \t ID : " << hpacket.dataId << "\t TAG " << hpacket.tag << std::endl;
+
+      // Zero set memory
+      std::memset(&buffer[pack_offset_start-4], 0, sizeof(HeaderPacket)+4);
+      // Add to open list
+      openHeaderPackets.push_back(hpacket);
+    }
+  else if (packet_found)
+    {
+      BodyPacket bpacket;
+      uint32_t packSize = (uint32_t) buffer[pack_offset];
+      pack_offset += sizeof(uint32_t);
+      std::cout << "Pack size : " << packSize << std::endl;
+      if (packSize > 6)
+	{
+	  uint16_t dataId = (uint16_t) buffer[pack_offset];
+	  pack_offset += sizeof(uint16_t);
+	  // copy to structure
+	  if (packSize > 1024)
+	    {
+	      // error
+	      print_error("Data size is bigger than buffer!");
+	    }
+	  bpacket.packetSize = packSize;
+	  bpacket.dataId = dataId;
+	  std::memcpy(bpacket.data, &buffer[pack_offset-1], (bpacket.packetSize - 6));
+	  
+	  // Remove from buffer
+	  std::memset(&buffer[pack_offset_start-4], 0, bpacket.packetSize+4);
+
+	  // Add to open list
+	  print_msg("Adding body packet to open list");
+	  openBodyPackets.push_back(bpacket);
+	}
+    } 
+}
+
+
+
+// Network Read void function
+// It attempts to read a block of bytes
+// from the connected socket
+// on success the bytes are added to the network buffer
+// so the network packet handlers can find and match packets correctly.
+void Network::Read(void)
+{
+  auto n                          = 0;
+  const auto buff_size            = 1024; 
+  uint8_t local_buffer[buff_size] = {};
+  std::string str_buffer          = "";
+
+  if ( (n = recv(confd, &local_buffer, buff_size, 0)) == -1)
     {
       // Error
       print_error("Error reading text from socket");
@@ -384,13 +543,22 @@ std::string Network::ReadText(void)
   else
     {
       // Success
-      std::cout << "Recieved : " << n << " data from server, copying to string" << std::endl;
+      std::cout << "[+]Recieved : " << n << " data from server,buffer offset=" << buffer_offset << ",  copying to buffer" << std::endl;
       for (auto i = 0; i < n; i++)
 	{
-	  auto c = buffer[i];
-	  str_buffer.push_back(c);
+	  // Check for overflow
+	  if ( (buffer_offset + n) >= buffer_size)
+	    {
+	      print_error("Network buffer is full!");
+	    }
+	  // Check for buffer is not null
+	  if (buffer == NULL)
+	    {
+	      print_error("Buffer is not initialized!!");
+	    }
+	  // If not
+	  buffer[buffer_offset] = local_buffer[i];
+	  buffer_offset++;
 	}
     }
-
-  return str_buffer;
 }

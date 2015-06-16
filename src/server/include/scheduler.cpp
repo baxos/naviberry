@@ -8,7 +8,7 @@
 
 // =================================== Scheduler Class ================================== //
 
-
+extern bool debugFlag;
 
 // Scheduler Constructor function
 // Initialize class variables
@@ -59,6 +59,11 @@ void Scheduler::Update()
       if (deltaT > 0)
 	{
 	  
+	  if (debugFlag)
+	    {
+	      // std::cout << "[+]DeltaT = " << deltaT << std::endl;
+	    }
+
 	  // Decrease counters
 	  hardwareCounter -= deltaT;
 	  sensorCounter   -= deltaT;
@@ -78,6 +83,9 @@ void Scheduler::Update()
 	      networkFlag = true;
 	    }
 	}
+
+      // Set last to now
+      ms_last_run = ms_now;
     }
   else
     {
