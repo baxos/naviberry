@@ -51,6 +51,10 @@ public:
   void setValue(std::string _val) { value = _val;};
   void setTag(std::string _tag) { tag = _tag;};
   void setId(uint16_t _id) { dataId = _id;};
+
+  std::string getValue() { return value; };
+  std::string getTag()   { return tag  ; };
+  uint16_t    getDataId(){ return dataId;};
 };
 
 class NetworkPacket
@@ -93,6 +97,7 @@ private:
   uint32_t buffer_size;
   uint8_t* buffer;
   uint32_t buffer_offset;
+  uint32_t buffer_end;
   std::list<HeaderPacket> openHeaderPackets;
   std::list<BodyPacket> openBodyPackets;
   std::list<TextPacket> TextPacketQueue;
@@ -110,7 +115,10 @@ public:                                         // Public functions
   void setBufferSize(uint32_t size);
   void WriteText(std::string txt, std::string tag);              // Write data to a packet and send it to the client
   void Read();                       // Reads a packet of text data from the client
+
+
   std::list<TextPacket> getTextQueue(){ return TextPacketQueue;};
+  int getTextQueueCount() { return TextPacketQueue.size(); };
   void CheckForCombinations();
   void CheckForPackets();
 };

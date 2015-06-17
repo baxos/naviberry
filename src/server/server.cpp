@@ -148,52 +148,53 @@ int main()
 
 
 	  // Parse network textpacket queue
-	  std::list<TextPacket> queue = net.getTextQueue();
-	  for (auto it = queue.begin(); it!=queue.end(); it++)
+	  if (net.getTextQueueCount() > 0)
 	    {
-	      std::cout << "Checking ID : " << it->dataId << "\t TAG : " << it->tag << std::endl;
-	      buffer = it->value;
-	      if (buffer == "")
-		break;
-	      if (buffer.compare("CLIENT_DISCONNECT")==0)
+	      std::list<TextPacket> queue = net.getTextQueue();
+	      for (auto it = queue.begin(); it!=queue.end(); it++)
 		{
-		  print_warning("Recieved DISONNECT signal, closing down");
-		  net.WriteText(comm_REPLY_DISCONNECT, senderServer);
-		  prog_running = false;
-		}	  
-	      else if (buffer.compare("CLIENT_READ_SENSOR")==0)
-		{
-		  std::cout << "Last distance measurement : " << dist_reading << std::endl;	      
-		  net.WriteText(dist_reading, senderSensor);
-		  
-		}
-	      else if (buffer.compare("CLIENT_TEST_SENSOR")==0)
-		{
-		  auto dist = 200;
-		  while (dist > 30)
+		  std::cout << "Checking ID : " << it->dataId << "\t TAG : " << it->tag << std::endl;
+		  buffer = it->value;
+		  if (buffer.compare("CLIENT_DISCONNECT")==0)
 		    {
-		      // Drive forward
-		      // Wait
-		      // Stop
-		      // Measure
-		      // Repeat
+		      print_warning("Recieved DISONNECT signal, closing down");
+		      net.WriteText(comm_REPLY_DISCONNECT, senderServer);
+		      prog_running = false;
+		      break;
+		    }	  
+		  else if (buffer.compare("CLIENT_READ_SENSOR")==0)
+		    {
+		      std::cout << "Last distance measurement : " << dist_reading << std::endl;	      
+		      net.WriteText(dist_reading, senderSensor);
 		      
-		      motorA.Start();
-		      motorB.Start();
-		      rob_sleep(100);
-		      motorA.Stop();
-		      motorB.Stop();
-		      rob_sleep(10);
+		    }
+		  /**		  else if (buffer.compare("CLIENT_TEST_SENSOR")==0)
+		    {
+		      auto dist = 200;
+		      while (dist > 30)
+			{
+			  // Drive forward
+			  // Wait
+			  // Stop
+			  // Measure
+			  // Repeat
+			  
+			  motorA.Start();
+			  motorB.Start();
+			  rob_sleep(100);
+			  motorA.Stop();
+			  motorB.Stop();
+			  rob_sleep(10);
+			  
+			  soundSensor.Pulse();
+			  dist = soundSensor.ReadDistance();
+			}
 		      
-		      soundSensor.Pulse();
-		      dist = soundSensor.ReadDistance();
+		      
 		    }
 		  
-		  
-		}
-	      
-	      // ============================= MOTOR A ====================================
-	      else if(buffer.compare("CLIENT_MOTORA_START")==0)
+		  // ============================= MOTOR A ====================================
+		  else if(buffer.compare("CLIENT_MOTORA_START")==0)
 		{
 		  // Start motor
 		  print_msg("STARTING MOTOR A");
@@ -303,12 +304,17 @@ int main()
 		  // Set motor stae back to origin
 		  motorA.setDirection(mota_dir);
 		  motorB.setDirection(motb_dir);
-		}
-	      else
-		{
-		  print_warning("Unknown message recived :");
-		  print_warning(buffer);    
-		}
+		  }*/
+		  else
+		    {
+		      print_warning("Unknown message recived :");
+		      print_warning(buffer);    
+		    }
+		  
+		  // Qucik fix!
+		  it = queue.erase(it);
+
+	    }
 	    }  
 	  // Reset flag
 	  sched.resetNetworkFlag();

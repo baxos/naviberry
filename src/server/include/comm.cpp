@@ -15,7 +15,7 @@ extern "C"
 #include "naviberryio.hpp"
 
 // For debugging
-bool debugFlag = false;
+bool debugFlag = true;
 
 
 // ===================================== TextPacket ==================== //
@@ -201,6 +201,8 @@ void Network::setBufferSize(uint32_t size)
     {
       buffer = new uint8_t[size];
     }
+
+  buffer_end = size;
 }
 
 // Network Create bool function
@@ -316,7 +318,7 @@ void Network::WriteText(std::string txt, std::string tag)
   // Create packet container
   NetworkPacket packet;
   auto error_happened = false;
-
+  
   // Create new packet with txt as data
   packet.CreateTextPacket(txt, tag);
 
@@ -328,9 +330,9 @@ void Network::WriteText(std::string txt, std::string tag)
   // Send header
   if (debugFlag)
     {
-    std::cout << "[+]Sending " << packet.getheaderBytesCount() << " bytes to client" << std::endl;
+      std::cout << "[+]Sending " << packet.getheaderBytesCount() << " bytes to client" << std::endl;
     }
-
+  
   if ( (writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount())) == true)
     {
       //      print_msg("Successfully send header packet");
@@ -396,50 +398,67 @@ void Network::CheckForCombinations()
 {
   // ita = iterator for header packets
   // itb = iterator for body packets
-  for (auto ita = openHeaderPackets.begin(); ita != openHeaderPackets.end(); ita++)
+  if (debugFlag)
     {
-      for (auto itb = openBodyPackets.begin(); itb != openBodyPackets.end(); itb++)
+      print_msg("CheckForCombinations()");
+    }
+
+  if ((openHeaderPackets.size() > 1) && (openBodyPackets.size() > 1))
+    {
+      for (auto ita = openHeaderPackets.begin(); ita != openHeaderPackets.end(); ita++)
 	{
-	  if (ita->dataId == itb->dataId)
+	  for (auto itb = openBodyPackets.begin(); itb != openBodyPackets.end(); itb++)
 	    {
-	      // We got match!
-	      TextPacket tp;
-	      if (ita->dataType = 0xFF)
+	      if (ita->dataId == itb->dataId)
 		{
-		  std::string strbuffer ="";
-		  // Text packet
-		  for (auto n = 0;n < ita->dataSize; n++)
+		  // We got match!
+		  TextPacket tp;
+		  if (ita->dataType = 0xFF)
 		    {
-		      strbuffer += (char) itb->data[n];		      
-		    }
-		  // Set value
-		  tp.setValue(strbuffer);
-	
-		  strbuffer = "";
-		  for (auto n = 0; n<10;n++)
-		    {
-		      strbuffer += ita->tag[n];
-		    } 
-		  // Set tag
-		  tp.setTag(strbuffer);
+		      std::string strbuffer ="";
+		      // Text packet
+		      for (auto n = 0;n < ita->dataSize; n++)
+			{
+			  strbuffer += (char) itb->data[n];		      
+			}
+		      // Set value
+		      tp.setValue(strbuffer);
+		      
+		      strbuffer = "";
+		      for (auto n = 0; n<10;n++)
+			{
+			  strbuffer += ita->tag[n];
+			} 
+		      // Set tag
+		      tp.setTag(strbuffer);
+		      
+		      // Set id
+		      tp.setId(ita->dataId);
 
-		  // Set id
-		  tp.setId(ita->dataId);
-	
-		  // Add to list
-		  TextPacketQueue.push_back(tp);
-
-
-		  print_msg("Removing elements from open list");
-		  // Remove elements from list
-		  ita = openHeaderPackets.erase(ita);
-		  itb = openBodyPackets.erase(itb);
+		      if (debugFlag)
+			{
+			  print_msg("Adding text packets to queue");
+			  std::cout << "TAG " << tp.getTag() << std::endl;
+			  std::cout << "VAL " << tp.getValue()<< std::endl;
+			}
+		      
+		      // Add to list
+		      TextPacketQueue.push_back(tp);
+		      
+		      
+		      print_msg("Removing elements from open list");
+		      // Remove elements from list
+		      ita = openHeaderPackets.erase(ita);
+		      itb = openBodyPackets.erase(itb);
+		    }     
 		}
-
-	      
-	      
 	    }
-	}
+	}      
+    }
+
+  if (debugFlag)
+    {
+      print_msg("CheckForCombinations() \t Exit()");
     }
 }
 
@@ -483,11 +502,18 @@ void Network::CheckForPackets()
       // Construct a header packet structure
       // And add it to the open list
       HeaderPacket hpacket;
+      
+      // copy raw bytes to headerpacket structure
       std::memcpy(&hpacket, &buffer[pack_offset], sizeof(HeaderPacket));
-      std::cout <<"[+]PACKET \t ID : " << hpacket.dataId << "\t TAG " << hpacket.tag << std::endl;
 
+      if (debugFlag)
+	{
+	  std::cout <<"[+]PACKET \t ID : " << hpacket.dataId << "\t TAG " << hpacket.tag << std::endl;
+	}
       // Zero set memory
       std::memset(&buffer[pack_offset_start-4], 0, sizeof(HeaderPacket)+4);
+
+      
       // Add to open list
       openHeaderPackets.push_back(hpacket);
     }
@@ -511,12 +537,19 @@ void Network::CheckForPackets()
 	  bpacket.dataId = dataId;
 	  std::memcpy(bpacket.data, &buffer[pack_offset-1], (bpacket.packetSize - 6));
 	  
+	  
 	  // Remove from buffer
 	  std::memset(&buffer[pack_offset_start-4], 0, bpacket.packetSize+4);
+	  // set new end index
+	  buffer_end = pack_offset_start + bpacket.packetSize;
 
 	  // Add to open list
 	  print_msg("Adding body packet to open list");
 	  openBodyPackets.push_back(bpacket);
+	}
+      else
+	{
+	  print_msg("Data does not match a packet");
 	}
     } 
 }
