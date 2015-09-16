@@ -16,7 +16,7 @@ SerialComm::SerialComm(std::string port)
     }
 }
 
-std::string SerialComm::Read(std::string dest)
+std::string SerialComm::Read()
 {
   cout << "[+]Trying to read from serial port" << endl;
   if (ready)
