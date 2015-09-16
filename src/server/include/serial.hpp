@@ -11,6 +11,6 @@ private:
   bool ready;
 public:
   SerialComm(std::string port);
-  std::string Read(std::string dest);
+  std::string Read();
   void Write(std::string data);
 };
