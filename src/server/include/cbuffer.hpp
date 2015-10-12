@@ -4,10 +4,8 @@
 */
 #ifndef CBUFFER__HPP
 #define CBUFFER__HPP
-
 #include<cstdint>
 #include<map>
-#include "./naviberryio.hpp"
 
 
 class NaviBuffer

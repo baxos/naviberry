@@ -85,7 +85,7 @@ void NaviBuffer::Add(uint8_t* _val, uint32_t _size)
   if (_size < block_size)
     {
       auto blockIndex = ReserveBlock();
-      CopyToBlock(&_val, _size, blockIndex);
+      CopyToBlock(_val, _size, blockIndex);
     }
   else if (_size > block_size)
     {
@@ -102,7 +102,7 @@ void NaviBuffer::Add(uint8_t* _val, uint32_t _size)
 	  std::memcpy(&_val[current_index], &block, block_size);
 	  
 	  // Copy to block
-	  CopyToBlock(block, _block_size, blockIndex);
+	  CopyToBlock(block, block_size, blockIndex);
 	
 	  current_size -= block_size;
 	  current_index += block_size;
