@@ -96,26 +96,5 @@ void NaviBuffer::Add(uint8_t* _val, uint32_t _size)
 
 void NaviBuffer::Remove(int size)
 {
-  // If we can do, without cross border
-  if ( start_pt + size < buff_size)
-    {
-      // Zero-set memory
-      std::memset(&data[start_pt], 0, size);
-      // Set new index
-      start_pt = start_pt + size; 
-    }
-  else
-    {
-      auto first_part = buff_size - start_pt;
-      auto second_part = size - first_part;
-      
-      // Zero-set first part
-      std::memset(&data[start_pt], 0, first_part);
-      start_pt = 0;
-      // Zero-set second part
-      std::memset(&data[start_pt], 0, second_part);
-      // Set new index
-      start_pt = second_part;
-      
-    }
+  // Write!
 }
