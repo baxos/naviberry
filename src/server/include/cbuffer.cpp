@@ -52,35 +52,11 @@ uint32_t NaviBuffer::freeSpace()
     {
       print_msg("CircularBuffer::freeSpace() \t Call()");
     }
-  auto freespace = 0;
 
-  std::cout << " == " << start_pt << " \t " << end_pt << " \t " << buff_size << std::endl;
-
-  if (start_pt > end_pt)
-    {
-      print_msg("start_pt > end_pt");
-      freespace = buff_size - (start_pt - end_pt);
-    }
-  else if (start_pt < end_pt)
-    {
-      print_msg("start_pt < end_pt");
-      freespace = buff_size - (end_pt - start_pt);
-    }
-  else if (start_pt == end_pt)
-    {
-      print_msg("start_pt == end_pt");
-      freespace = buff_size;
-    }
-
-  if (debugFlag)
-    {
-      print_msg("CircularBuffer::freeSpace() \t Exit()");
-    }
-
-  return freespace;
+  return 0;
 }
 
-uint16_t NaviBuffer:ReserveBlock()
+uint16_t NaviBuffer::ReserveBlock()
 {
   // Search for empty block, return index
 

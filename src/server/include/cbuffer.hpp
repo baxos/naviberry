@@ -19,9 +19,11 @@ private:
   uint32_t end_pt;
   uint16_t block_size;
   uint16_t blocks;
-
   std::map <uint16_t, bool> blockmap;
+  // Private functions
   uint32_t freeSpace();
+  uint16_t ReserveBlock();
+  void CopyToBlock(uint8_t* data, uint32_t _size, uint16_t _index);
 public:
   NaviBuffer(uint32_t _buffer_size);
   ~NaviBuffer();
