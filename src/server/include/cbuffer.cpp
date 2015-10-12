@@ -66,8 +66,10 @@ uint16_t NaviBuffer::ReserveBlock()
 void NaviBuffer::CopyToBlock(uint8_t* _val, uint32_t _size, uint16_t _index)
 {
   auto start_position = _index * block_size;
-  auto end_position   = start_position + _size;
+  // Copy the data to the class data container
   std::memcpy(&data[start_position], &_val, _size);
+  // Update block map
+  blockmap[_index] = true;
 }
 
 void NaviBuffer::Add(uint8_t* _val, uint32_t _size)
@@ -83,10 +85,28 @@ void NaviBuffer::Add(uint8_t* _val, uint32_t _size)
   if (_size < block_size)
     {
       auto blockIndex = ReserveBlock();
-      CopyToBlock(_val, _size, blockIndex);
+      CopyToBlock(&_val, _size, blockIndex);
     }
   else if (_size > block_size)
     {
+      auto current_size = _size;
+      auto current_index = 0;
+
+      while (current_size > 0)
+	{
+	  // Reserve block
+	  auto blockIndex = ReserveBlock();
+	 
+	  // Create small pieces of the data
+	  uint8_t* block = new uint8_t[block_size];
+	  std::memcpy(&_val[current_index], &block, block_size);
+	  
+	  // Copy to block
+	  CopyToBlock(block, _block_size, blockIndex);
+	
+	  current_size -= block_size;
+	  current_index += block_size;
+	}
     }
   else
     {
