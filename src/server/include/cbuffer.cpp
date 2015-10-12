@@ -12,24 +12,41 @@
 extern bool debugFlag;
 
 
-CircularBuffer::CircularBuffer(uint32_t buffer_size)
+NaviBuffer::NaviBuffer(uint32_t _buffer_size)
 {
   // Set start and end pointers
   start_pt = 0;
   end_pt   = 0;
+  block_size = 256;
+  buffer_size = _buffer_size;
+
+  // If buff size is small, make blck size small too
+  if (buffer_size < 256)
+    {
+      block_size = 8;
+    }
+
+  blocks = buffer_size / block_size;
 
   // Allocate memory
-  buff_size = buffer_size;
-  data = new uint8_t[buff_size];
+  data = new uint8_t[buffer_size];
+
+
+  // Make ready block map
+  for (auto i = 0; i < blocks; i++)
+    {
+      // Blocks are simply by ID 0..1..2..3
+      blockmap[i] = false;
+    }
 }
 
-CircularBuffer::~CircularBuffer()
+NaviBuffer::~NaviBuffer()
 {
   // Free memory
   delete data;
 }
 
-uint32_t CircularBuffer::freeSpace()
+uint32_t NaviBuffer::freeSpace()
 {
   if (debugFlag)
     {
@@ -63,48 +80,45 @@ uint32_t CircularBuffer::freeSpace()
   return freespace;
 }
 
-void CircularBuffer::Add(uint8_t* val, uint32_t size)
+uint16_t NaviBuffer:ReserveBlock()
+{
+  // Search for empty block, return index
+
+
+}
+
+void NaviBuffer::CopyToBlock(uint8_t* _val, uint32_t _size, uint16_t _index)
+{
+  auto start_position = _index * block_size;
+  auto end_position   = start_position + _size;
+  std::memcpy(&data[start_position], &_val, _size);
+}
+
+void NaviBuffer::Add(uint8_t* _val, uint32_t _size)
 {
   // Check if we have enough free space in buffer
   // if not print error
   if ( debugFlag)
     {
-      print_msg("CircularBuffer::Add() \t Call()");
+      print_msg("NaviBuffer::Add() \t Call()");
     }
-  if (freeSpace() > size)
+
+  // If the data size is less than a one block, we just reserve that one and copy data
+  if (_size < block_size)
     {
-      // If we dont exceed array max
-      // We can copy it directly
-      if ( end_pt + size < buff_size )
-	{
-	  print_msg("end_pt + size < buff_size \t start memcpy");
-	  std::memcpy(&data[end_pt], &val, size * sizeof(uint8_t));
-	  end_pt += size;
-	}
-      else
-	{
-	  auto first_part_size = buff_size - end_pt;
-	  auto second_part_size = size - first_part_size;
-	  
-	  print_msg("Splitting data, \t start memcpy");
-	  std::memcpy(&data[end_pt], &val, first_part_size);
-	  end_pt = 0;
-	  std::memcpy(&data[end_pt], &val[first_part_size], second_part_size);
-	  end_pt += second_part_size;
-	}
-
-
-      print_msg("Pointers : ");
-      std::cout << "end_pt = " << end_pt << "\t start_pt  " << start_pt <<  "\t size = " << size << std::endl;
-      std::cout << "buffer size = " << buff_size << std::endl;
+      auto blockIndex = ReserveBlock();
+      CopyToBlock(_val, _size, blockIndex);
+    }
+  else if (_size > block_size)
+    {
     }
   else
     {
-      print_error("Circular buffer is out of memory!");
+      print_error("Unkown error happened, please refer to the log");
     }
 }
 
-void CircularBuffer::Remove(int size)
+void NaviBuffer::Remove(int size)
 {
   // If we can do, without cross border
   if ( start_pt + size < buff_size)
