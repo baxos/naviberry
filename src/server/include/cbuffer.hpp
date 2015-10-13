@@ -26,7 +26,7 @@ public:
   NaviBuffer(uint32_t _buffer_size);
   ~NaviBuffer();
   void Add(uint8_t* val, uint32_t size);
-  void Remove(int size);
+  void RemoveAt(int _startIndex, int _size);
   // gets
   uint32_t getStartPt() { return start_pt; };
   uint32_t getEndPt()  { return end_pt;   };

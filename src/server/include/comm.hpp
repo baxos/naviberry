@@ -16,6 +16,7 @@ extern "C"
 #include <sys/socket.h>
 #include <netinet/in.h>
 }
+#include "./cbuffer.hpp"
 //struct sockaddr_in;
 
 
@@ -94,10 +95,11 @@ private:
   uint16_t port;                                // Port number
   uint8_t sockfd;                               // Socket file descriptor for listen
   uint8_t confd;                                // Socket file descriptor connected to client
-  uint32_t buffer_size;
-  uint8_t* buffer;
-  uint32_t buffer_offset;
-  uint32_t buffer_end;
+  // uint32_t buffer_size;
+  // uint8_t* buffer;
+  // uint32_t buffer_offset;
+  // uint32_t buffer_end;
+  NaviBuffer* cbuffer;
   std::list<HeaderPacket> openHeaderPackets;
   std::list<BodyPacket> openBodyPackets;
   std::list<TextPacket> TextPacketQueue;
@@ -117,6 +119,7 @@ public:                                         // Public functions
   void Read();                       // Reads a packet of text data from the client
 
 
+  void clearTextQueue() { TextPacketQueue.clear(); };
   std::list<TextPacket> getTextQueue(){ return TextPacketQueue;};
   int getTextQueueCount() { return TextPacketQueue.size(); };
   void CheckForCombinations();

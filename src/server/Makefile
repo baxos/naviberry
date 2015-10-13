@@ -23,6 +23,9 @@ naviberryio.o:	./include/naviberryio.cpp ./include/naviberryio.hpp
 server.o:	./server.cpp
 	g++ -c ./server.cpp  $(CFLAGS)
 
+cbuffer.o: 	./include/cbuffer.cpp ./include/cbuffer.hpp
+	g++ -c ./include/cbuffer.cpp $(CFLAGS)
+
 comm.o:	./include/comm.cpp ./include/comm.hpp
 	g++ -c ./include/comm.cpp  $(CFLAGS)
 
@@ -34,9 +37,6 @@ serial.o:
 
 scheduler.o:	./include/scheduler.cpp ./include/scheduler.hpp
 	g++ -c ./include/scheduler.cpp $(CFLAGS)
-
-cbuffer.o:	./include/cbuffer.cpp ./include/cbuffer.hpp
-	g++ -c ./include/cbuffer.cpp $(CFLAGS)
 
 .PHONY : clean
 clean : 

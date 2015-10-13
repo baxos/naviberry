@@ -146,7 +146,7 @@ int main()
 	  net.CheckForCombinations();
 
 
-
+	  print_msg("Checking textpacket queue");
 	  // Parse network textpacket queue
 	  if (net.getTextQueueCount() > 0)
 	    {
@@ -312,10 +312,17 @@ int main()
 		    }
 		  
 		  // Qucik fix!
-		  it = queue.erase(it);
+		  // net.removeTextQueue(it);
 
 	    }
+
+	      print_msg("Clearing text packet queue");
+	      // We processed all element, now clear queue
+	      net.clearTextQueue();
+	      
 	    }  
+	  // We processed all 
+	  
 	  // Reset flag
 	  sched.resetNetworkFlag();
 	}     

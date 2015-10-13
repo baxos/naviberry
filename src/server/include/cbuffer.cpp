@@ -60,17 +60,45 @@ uint16_t NaviBuffer::ReserveBlock()
 {
   // Search for empty block, return index
 
+  // If debug is on print function name
+  if (debugFlag)
+    {
+      print_msg("NaviBuffer::ReserveBlock \t Call()");
+    }
 
+  // Iterate through blockmap until an empty is found
+  for (auto it = 0; it < blocks; it++)
+    {
+      if (blockmap[it] == false)
+	{
+     	  std::cout << "Returning index : " << it << std::endl;
+	  return it;
+	}
+    }
+
+  return -1;
 }
+
+
 
 void NaviBuffer::CopyToBlock(uint8_t* _val, uint32_t _size, uint16_t _index)
 {
+  // Copy chunk of memory to a block of memory in the class
+
+  // If debug is on print function name
+  if (debugFlag)
+    {
+      print_msg("NaviBuffer::CopyTopBlock \t Call()");
+    }
+
   auto start_position = _index * block_size;
   // Copy the data to the class data container
-  std::memcpy(&data[start_position], &_val, _size);
+  std::memcpy(&data[start_position], _val, _size);
   // Update block map
   blockmap[_index] = true;
 }
+
+
 
 void NaviBuffer::Add(uint8_t* _val, uint32_t _size)
 {
@@ -114,7 +142,18 @@ void NaviBuffer::Add(uint8_t* _val, uint32_t _size)
     }
 }
 
-void NaviBuffer::Remove(int size)
+void NaviBuffer::RemoveAt(int _startIndex, int _size)
 {
   // Write!
+
+  // Determine block
+  auto n = _size;
+  auto blockIndex = 0;
+
+  for (auto n = 0; n < _startIndex; n+=blockIndex)
+    {
+      blockIndex++;
+    }
+
+  blockmap[blockIndex] = false;
 }

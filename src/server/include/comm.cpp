@@ -166,14 +166,16 @@ Network::Network(std::string _host, uint16_t _port)
   print_msg("Set class variables..");
   print_msg("Set standard buffer size to 4096");
 
-  buffer = NULL;
-  buffer_size = 4096;
-  buffer_offset = 0;
-  setBufferSize(buffer_size);
+
+  // Initialize buffer
+  cbuffer = new NaviBuffer(10 * 1000000);
 
   // Set class variables
   hostname = _host;
   port = _port;
+
+
+
   // which type of connection
   server_addr.sin_family = AF_INET;
   server_addr.sin_port = htons(port);
@@ -187,6 +189,7 @@ Network::Network(std::string _host, uint16_t _port)
 // and (re)allocate
 void Network::setBufferSize(uint32_t size)
 {
+  /*
   auto old_size = buffer_size;
   buffer_size = size;
   if ( buffer != NULL)
@@ -203,6 +206,7 @@ void Network::setBufferSize(uint32_t size)
     }
 
   buffer_end = size;
+  */
 }
 
 // Network Create bool function
@@ -330,7 +334,7 @@ void Network::WriteText(std::string txt, std::string tag)
   // Send header
   if (debugFlag)
     {
-      std::cout << "[+]Sending " << packet.getheaderBytesCount() << " bytes to client" << std::endl;
+      std::cout << "[+] Sending " << packet.getheaderBytesCount() << " bytes to client" << std::endl;
     }
   
   if ( (writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount())) == true)
@@ -390,6 +394,11 @@ bool Network::SendBinaryPacket(uint8_t* data)
 {
 
 }
+
+
+
+
+
 // Netowrk CheckForCombinations void function
 // Looks for header and body packets matches
 // If it finds them it will remove them from open list
@@ -400,7 +409,7 @@ void Network::CheckForCombinations()
   // itb = iterator for body packets
   if (debugFlag)
     {
-      print_msg("CheckForCombinations()");
+      print_msg("CheckForCombinations() \t Call()");
     }
 
   if ((openHeaderPackets.size() > 1) && (openBodyPackets.size() > 1))
@@ -471,12 +480,19 @@ void Network::CheckForCombinations()
 // and zero set the section in the class buffer
 void Network::CheckForPackets()
 {
+  if (debugFlag)
+    {
+      print_msg("CheckForPackets() \t Call()");
+    }
+
       auto pack_offset        = 0;
       auto pack_offset_start  = 0;
       bool packet_found       = false;
-      
 
-      for (auto n=0; n <= buffer_offset; n++)
+      uint8_t* buffer = cbuffer->getData();
+      uint32_t buffer_size = cbuffer->getBufferSize();
+      
+      for (auto n=0; n <=buffer_size ; n++)
 	{
 	  // check for overflow
 	  if ( (n + 4 ) > buffer_size)
@@ -512,7 +528,7 @@ void Network::CheckForPackets()
 	}
       // Zero set memory
       std::memset(&buffer[pack_offset_start-4], 0, sizeof(HeaderPacket)+4);
-
+      cbuffer->RemoveAt(pack_offset_start-4, sizeof(HeaderPacket)+4);
       
       // Add to open list
       openHeaderPackets.push_back(hpacket);
@@ -536,12 +552,10 @@ void Network::CheckForPackets()
 	  bpacket.packetSize = packSize;
 	  bpacket.dataId = dataId;
 	  std::memcpy(bpacket.data, &buffer[pack_offset-1], (bpacket.packetSize - 6));
-	  
-	  
+	    
 	  // Remove from buffer
 	  std::memset(&buffer[pack_offset_start-4], 0, bpacket.packetSize+4);
-	  // set new end index
-	  buffer_end = pack_offset_start + bpacket.packetSize;
+	  cbuffer->RemoveAt(pack_offset_start-4, bpacket.packetSize+4);
 
 	  // Add to open list
 	  print_msg("Adding body packet to open list");
@@ -552,6 +566,12 @@ void Network::CheckForPackets()
 	  print_msg("Data does not match a packet");
 	}
     } 
+
+  if (debugFlag)
+    {
+      print_msg("CheckForPackets() \t Exit()");
+    }
+      
 }
 
 
@@ -568,7 +588,7 @@ void Network::Read(void)
   uint8_t local_buffer[buff_size] = {};
   std::string str_buffer          = "";
 
-  if ( (n = recv(confd, &local_buffer, buff_size, 0)) == -1)
+  if ( (n = recv(confd, &local_buffer, buff_size-1, 0)) == -1)
     {
       // Error
       print_error("Error reading text from socket");
@@ -576,8 +596,10 @@ void Network::Read(void)
   else
     {
       // Success
-      std::cout << "[+]Recieved : " << n << " data from server,buffer offset=" << buffer_offset << ",  copying to buffer" << std::endl;
-      for (auto i = 0; i < n; i++)
+      std::cout << "[+] Recieved : " << n << " data from server" << std::endl;
+      cbuffer->Add(local_buffer, (uint32_t) n);
+      print_msg("Added data to buffer");
+      /*for (auto i = 0; i < n; i++)
 	{
 	  // Check for overflow
 	  if ( (buffer_offset + n) >= buffer_size)
@@ -593,5 +615,8 @@ void Network::Read(void)
 	  buffer[buffer_offset] = local_buffer[i];
 	  buffer_offset++;
 	}
+      */
     }
+
+  print_msg("Return call");
 }
