@@ -162,7 +162,7 @@ int main()
 		      prog_running = false;
 		      break;
 		    }	  
-		  else if (buffer.compare("CLIENT_READ_SENSOR")==0)
+		  else if (buffer.compare("CLIENT_READ_SENSORS")==0)
 		    {
 		      std::cout << "Last distance measurement : " << dist_reading << std::endl;	      
 		      net.WriteText(dist_reading, senderSensor);

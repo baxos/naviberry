@@ -79,7 +79,7 @@ public:
   uint8_t* getheaderBytes() { return headerBytes;};
   uint8_t getheaderBytesCount() { return headerBytesCount; };
 
- 
+
   void CreateTextPacket(std::string txt, std::string tag);       // Create a body and header packet from a text string
   void CreateBinaryPacket(uint8_t* val);        // Create a body and header packet from raw bytes
 };
@@ -112,6 +112,7 @@ public:                                         // Public functions
   bool Bind();                                  // Binds the socket, returns false on error and true on success
   bool Listen();                                // Listen on the socket, returns false on error and true on successs
   bool Accept();                                // Accept a connection attempt, returns false on error and true on success 
+  void DumpBuffer();
   bool SendTextPacket(std::string txt);
   bool SendBinaryPacket(uint8_t* data);
   void setBufferSize(uint32_t size);

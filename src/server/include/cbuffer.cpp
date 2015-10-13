@@ -17,20 +17,16 @@ NaviBuffer::NaviBuffer(uint32_t _buffer_size)
   // Set start and end pointers
   start_pt = 0;
   end_pt   = 0;
-  block_size = 256;
+  buffer_offset = 0;
+  current_data_size = 0;
   buffer_size = _buffer_size;
 
-  // If buff size is small, make blck size small too
-  if (buffer_size < 256)
-    {
-      block_size = 8;
-    }
-
-  blocks = buffer_size / block_size;
 
   // Allocate memory
   data = new uint8_t[buffer_size];
 
+  // Zero set data
+  std::memset(data, 0, buffer_size-1);
 
   // Make ready block map
   for (auto i = 0; i < blocks; i++)
@@ -109,51 +105,34 @@ void NaviBuffer::Add(uint8_t* _val, uint32_t _size)
       print_msg("NaviBuffer::Add() \t Call()");
     }
 
-  // If the data size is less than a one block, we just reserve that one and copy data
-  if (_size < block_size)
-    {
-      auto blockIndex = ReserveBlock();
-      CopyToBlock(_val, _size, blockIndex);
-    }
-  else if (_size > block_size)
-    {
-      auto current_size = _size;
-      auto current_index = 0;
+  // Add _size to current_data_size so we know the amount of data we are holding
+  current_data_size += _size;
 
-      while (current_size > 0)
-	{
-	  // Reserve block
-	  auto blockIndex = ReserveBlock();
-	 
-	  // Create small pieces of the data
-	  uint8_t* block = new uint8_t[block_size];
-	  std::memcpy(&_val[current_index], &block, block_size);
-	  
-	  // Copy to block
-	  CopyToBlock(block, block_size, blockIndex);
-	
-	  current_size -= block_size;
-	  current_index += block_size;
-	}
-    }
-  else
+  // Copy data to buffer, update offset
+  std::memcpy(&data[buffer_offset], &_val[0], _size);
+  buffer_offset += _size;
+
+  // If buffer_offset is greater than buffer_size
+  // reset it to zero or whatever position fit better
+  if (buffer_offset >= buffer_size)
     {
-      print_error("Unkown error happened, please refer to the log");
+      print_warning("Buffer reset position");
+      buffer_offset = 0;
     }
+
 }
 
 void NaviBuffer::RemoveAt(int _startIndex, int _size)
 {
-  // Write!
-
-  // Determine block
-  auto n = _size;
-  auto blockIndex = 0;
-
-  for (auto n = 0; n < _startIndex; n+=blockIndex)
+  if (debugFlag)
     {
-      blockIndex++;
+      print_msg("NaviBufffer::RemoveAt() \t Call()");
+      std::cout << "_startIndex = " << _startIndex << "\t _size = " << _size << std::endl;
     }
 
-  blockmap[blockIndex] = false;
+  // zero set memory at specified location
+  std::memset(&data[_startIndex], 0, _size);
+
+  // update memory map
+  // .. not ready 
 }

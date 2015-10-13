@@ -5,6 +5,7 @@
 #include <cstring>
 #include <iostream>
 #include <list>
+#include <iomanip>
 extern "C"
 {
 #include <sys/types.h>
@@ -164,11 +165,11 @@ Network::Network(std::string _host, uint16_t _port)
 {
   print_msg("Network constructor() called");
   print_msg("Set class variables..");
-  print_msg("Set standard buffer size to 4096");
+  print_msg("Set standard buffer size to 100.000 bytes");
 
 
   // Initialize buffer
-  cbuffer = new NaviBuffer(10 * 1000000);
+  cbuffer = new NaviBuffer(100000);
 
   // Set class variables
   hostname = _host;
@@ -410,6 +411,8 @@ void Network::CheckForCombinations()
   if (debugFlag)
     {
       print_msg("CheckForCombinations() \t Call()");
+      std::cout << "HeaderPackets.size() = " << openHeaderPackets.size() << "\t BodyPackets.size() = " << openBodyPackets.size() << std::endl;
+      
     }
 
   if ((openHeaderPackets.size() > 1) && (openBodyPackets.size() > 1))
@@ -472,6 +475,19 @@ void Network::CheckForCombinations()
 }
 
 
+
+void Network::DumpBuffer()
+{
+  auto i = 0;
+  auto data_size = cbuffer->getDataSize();
+  uint8_t* data = cbuffer->getData();
+  for (auto i = 0; i < data_size; i++)
+    {
+      uint8_t val = data[i];
+      printf("%u \t", val);
+    }
+}
+
 // Network CheckForPackets void function
 // It searches through the class buffer
 // for 4 bytes N,A,V,I
@@ -487,90 +503,138 @@ void Network::CheckForPackets()
 
       auto pack_offset        = 0;
       auto pack_offset_start  = 0;
+      auto iterations_counted = 0;
       bool packet_found       = false;
+      bool isDone             = false;
 
       uint8_t* buffer = cbuffer->getData();
-      uint32_t buffer_size = cbuffer->getBufferSize();
-      
-      for (auto n=0; n <=buffer_size ; n++)
-	{
-	  // check for overflow
-	  if ( (n + 4 ) > buffer_size)
-	    {
-	      break;
-	    }
-
-      if ( buffer[n] == 'N' && buffer[n+1] == 'A' && buffer[n+2] == 'V' && buffer[n+3] == 'I')
-	{
-	  // Found packet
-	  std::cout << "Signature bytes found on offset " << n << std::endl;
-	  packet_found      = true;
-	  pack_offset       = n+4;
-	  pack_offset_start = pack_offset;
-	  break;
-	}
-    }
-
-  if ( ((packet_found) && buffer[pack_offset] == sizeof(HeaderPacket)))
-    {
-      // If n+4th byte is equal to the sizeof headerstructure
-      // its a header packet found
-      // Construct a header packet structure
-      // And add it to the open list
-      HeaderPacket hpacket;
-      
-      // copy raw bytes to headerpacket structure
-      std::memcpy(&hpacket, &buffer[pack_offset], sizeof(HeaderPacket));
+      uint32_t buffer_size = cbuffer->getDataSize();
 
       if (debugFlag)
-	{
-	  std::cout <<"[+]PACKET \t ID : " << hpacket.dataId << "\t TAG " << hpacket.tag << std::endl;
-	}
-      // Zero set memory
-      std::memset(&buffer[pack_offset_start-4], 0, sizeof(HeaderPacket)+4);
-      cbuffer->RemoveAt(pack_offset_start-4, sizeof(HeaderPacket)+4);
+	std::cout << "current buffer data size = " << buffer_size << std::endl;
+
+
+      // Buffer is too small to we care about it...
+      if (buffer_size < 20)
+	return;
       
-      // Add to open list
-      openHeaderPackets.push_back(hpacket);
-    }
-  else if (packet_found)
-    {
-      BodyPacket bpacket;
-      uint32_t packSize = (uint32_t) buffer[pack_offset];
-      pack_offset += sizeof(uint32_t);
-      std::cout << "Pack size : " << packSize << std::endl;
-      if (packSize > 6)
+
+      while (isDone == false)
 	{
-	  uint16_t dataId = (uint16_t) buffer[pack_offset];
-	  pack_offset += sizeof(uint16_t);
-	  // copy to structure
-	  if (packSize > 1024)
+	  iterations_counted++;
+	  packet_found = false;
+	  pack_offset = 0;
+	  pack_offset_start = 0;
+	  bool HeaderPacketFound = false;
+	  bool BodyPacketFound   = false;
+
+
+	  for (auto n=0; n <=buffer_size ; n++)
 	    {
-	      // error
-	      print_error("Data size is bigger than buffer!");
+	      // check for overflow
+	      if ( (n + 4 ) > buffer_size)
+		{
+		  print_msg("Iterated through buffer");
+		  isDone = true;
+		  break;
+		}
+	      
+	      if ( buffer[n] == 'N' && buffer[n+1] == 'A' && buffer[n+2] == 'V' && buffer[n+3] == 'I')
+		{
+		  // Found packet
+		  std::cout << "Signature bytes found on offset " << n << std::endl;
+		  if (buffer[n+4] == sizeof(HeaderPacket))
+		    {
+		      print_msg("Packet is a headerpacket");
+		      HeaderPacketFound = true;
+		    }
+		    else
+		      {
+			print_msg("Packet is a body packet");
+			BodyPacketFound = true;
+		      }
+		  packet_found      = true;
+		  pack_offset       = n+4;
+		  pack_offset_start = pack_offset;
+		  break;
+		}
 	    }
-	  bpacket.packetSize = packSize;
-	  bpacket.dataId = dataId;
-	  std::memcpy(bpacket.data, &buffer[pack_offset-1], (bpacket.packetSize - 6));
-	    
-	  // Remove from buffer
-	  std::memset(&buffer[pack_offset_start-4], 0, bpacket.packetSize+4);
-	  cbuffer->RemoveAt(pack_offset_start-4, bpacket.packetSize+4);
 
-	  // Add to open list
-	  print_msg("Adding body packet to open list");
-	  openBodyPackets.push_back(bpacket);
+	  if (debugFlag)
+	    std::cout << "packet_found=" << packet_found << "\t buffer[pack_offset] = " << (uint32_t) buffer[pack_offset] << " should be = " << sizeof(HeaderPacket) << std::endl;
+	  if ( ((packet_found) && buffer[pack_offset] == sizeof(HeaderPacket)))
+	    {
+	      // If n+4th byte is equal to the sizeof headerstructure
+	      // its a header packet found
+	      // Construct a header packet structure
+	      // And add it to the open list
+	      HeaderPacket hpacket;
+	      
+	      // copy raw bytes to headerpacket structure
+	      std::memcpy(&hpacket, &buffer[pack_offset], sizeof(HeaderPacket));
+	      
+	      if (debugFlag)
+		{
+		  std::cout <<"[+]PACKET \t ID : " << hpacket.dataId << "\t TAG " << hpacket.tag << std::endl;
+		}
+	      // Zero set memory
+	      // std::memset(&buffer[pack_offset_start-4], 0, sizeof(HeaderPacket)+4);
+	      cbuffer->RemoveAt(pack_offset_start-4, sizeof(HeaderPacket)+4);
+	      
+	      // Add to open list
+	      openHeaderPackets.push_back(hpacket);
+	    }
+	  else if (packet_found)
+	    {
+	      // Navi signal is found and th epacket size doesn't match a header packet
+	      // So this should be a body packet
+	      BodyPacket bpacket;
+	      uint32_t packSize = (uint32_t) buffer[pack_offset];
+
+
+	      pack_offset += sizeof(uint32_t);
+	      std::cout << "Pack size : " << packSize << std::endl;
+
+	      if (packSize > 6)
+		{
+		  uint16_t dataId = (uint16_t) buffer[pack_offset];
+		  pack_offset += sizeof(uint16_t);
+		  // copy to structure
+		  if (packSize > 1024)
+		    {
+		      // error
+		      print_error("Data size is bigger than buffer!");
+		    }
+		  bpacket.packetSize = packSize;
+		  bpacket.dataId = dataId;
+		  std::memcpy(bpacket.data, &buffer[pack_offset-1], (bpacket.packetSize - 6));
+		  
+		  // Remove from buffer
+		  // std::memset(&buffer[pack_offset_start-4], 0, bpacket.packetSize+4);
+		  cbuffer->RemoveAt(pack_offset_start-4, bpacket.packetSize+4);
+		  
+		  // Add to open list
+		  print_msg("Adding body packet to open list");
+		  openBodyPackets.push_back(bpacket);
+		}
+	      else
+		{
+		  print_msg("Data does not match a packet");
+		}
+	    } 
+	  else
+	    {
+
+	      print_warning("Nothing matched, dumping buffer");
+	      DumpBuffer();
+	    }
 	}
-      else
+      
+      if (debugFlag)
 	{
-	  print_msg("Data does not match a packet");
+	  std::cout << "Iterations = " << iterations_counted << std::endl;
+	  print_msg("CheckForPackets() \t Exit()");
 	}
-    } 
-
-  if (debugFlag)
-    {
-      print_msg("CheckForPackets() \t Exit()");
-    }
       
 }
 
