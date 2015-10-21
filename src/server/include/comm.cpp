@@ -80,7 +80,7 @@ NetworkPacket::~NetworkPacket()
     {
       if (debugFlag)
 	{
-	  // std::cout << "[+]Freeing " << bodyBytesCount << " bytes of memory" << std::endl;
+	  std::cout << "[+]Freeing " << (uint32_t) bodyBytesCount << " bytes of memory" << std::endl;
 	}
       delete bodyBytes;
     }
@@ -89,14 +89,50 @@ NetworkPacket::~NetworkPacket()
     {
       if (debugFlag)
 	{
-	  //  print_str("Freeing " << headerBytesCount << " bytes of memory");
+	  std::cout <<  "[+]Freeing " << (uint32_t) headerBytesCount << " bytes of memory" << std::endl;
 	}
       delete headerBytes;
     }
 
 }
 
-void NetworkPacket::CreateTextPacket(std::string txt, std::string tag)
+void NetworkPacket::CreateDataPacket(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
+{
+  // Set the header packet
+  hpacket.packetSize   = sizeof(HeaderPacket);
+  hpacket.dataType     = _type;
+  hpacket.dataId       = dataId;
+  hpacket.dataSize     = _dataSize;
+  hpacket.bodyPacketSize = (sizeof(bpacket.packetSize) + sizeof(bpacket.dataId) + hpacket.dataSize);
+  
+
+  // Set the body packet
+  bpacket.packetSize     = hpacket.bodyPacketSize;
+  bpacket.dataId         = dataId;
+  // Copy data to the structure
+  memcpy(&bpacket.data[0], &_data[0], _dataSize);
+	
+  if (debugFlag)
+    {
+      std::cout << "hpacket:"<<std::endl <<
+	"HeaderPacket.packetSize \t : " << (int) sizeof(HeaderPacket) << std::endl <<
+	"HeaderPacket.dataType   \t : " << (uint16_t) hpacket.dataType << std::endl <<
+	"HeaderPacket.dataSize   \t : " << (uint32_t) hpacket.dataSize << std::endl;
+    }
+
+  // raw byte copy of header packet
+  headerBytesCount = sizeof(HeaderPacket);
+  headerBytes      = new uint8_t[headerBytesCount];
+  std::memcpy(&headerBytes[0], &hpacket, headerBytesCount);
+
+
+  // raw byte copy of body packet
+  bodyBytesCount = hpacket.bodyPacketSize;
+  bodyBytes      = new uint8_t[bodyBytesCount];
+  std::memcpy(&bodyBytes[0], &bpacket, bodyBytesCount);
+}
+
+void NetworkPacket::CreateTextPacket(std::string txt)
 {
   // set header packet
   hpacket.packetSize = sizeof(HeaderPacket);         // size of this structure
@@ -104,41 +140,31 @@ void NetworkPacket::CreateTextPacket(std::string txt, std::string tag)
   hpacket.dataId = dataId;                           // Semi unique id
   hpacket.dataSize = txt.size();                     // just size of text string
   hpacket.bodyPacketSize = sizeof(bpacket.packetSize) + sizeof(bpacket.dataId) + hpacket.dataSize;
-  // Set tag
-  // Check for oversize
-  if (tag.size() < 10)
-    {
-      // Zero-set memory first
-      std::memset(hpacket.tag, 0, 10);
-      std::memcpy(hpacket.tag, tag.c_str(), tag.size());
-    }
-  else
-    {
-      print_warning("Tag input was bigger than allowed,only copying 10 bytes");
-    }
-
   
 
   // set body packet
   bpacket.packetSize = hpacket.bodyPacketSize;
   bpacket.dataId = dataId;
   // copy to memory to structure
-  memcpy(bpacket.data, txt.c_str(), hpacket.dataSize);
+  std::memcpy(bpacket.data, txt.c_str(), hpacket.dataSize);
 
   // Copy byte structure
   if (debugFlag)
     {
-      // std::cout << "Copying " << sizeof(HeaderPacket) << " bytes to other location" << std::endl;
+      std::cout << "Copying " << sizeof(HeaderPacket) << " bytes to other location" << std::endl;
     }
-  headerBytesCount = sizeof(HeaderPacket);
-  headerBytes = new uint8_t[headerBytesCount];
-  std::memcpy(headerBytes, &hpacket, headerBytesCount);
-
   // Copy body structure
   if (debugFlag)
     {
-      // std::cout << "Copying " << hpacket.bodyPacketSize << " bytes to body bytearray" << std::endl;
+      std::cout << "Copying " << hpacket.bodyPacketSize << " bytes to body bytearray" << std::endl;
     }
+
+  // Make copy of header bytes
+  headerBytesCount = sizeof(HeaderPacket);
+  headerBytes      = new uint8_t[headerBytesCount];
+  std::memcpy(headerBytes, &hpacket, headerBytesCount);
+
+  // Make copy of body bytes
   bodyBytesCount = hpacket.bodyPacketSize;
   bodyBytes      = new uint8_t[bodyBytesCount];
   std::memcpy(bodyBytes, &bpacket, bodyBytesCount);
@@ -146,12 +172,6 @@ void NetworkPacket::CreateTextPacket(std::string txt, std::string tag)
 
   print_msg("Packet created");
 }
-
-void NetworkPacket::CreateBinaryPacket(uint8_t* val)
-{
-
-}
-
 
 
 
@@ -314,18 +334,60 @@ bool Network::writeRaw(uint8_t* val, size_t len)
 }
 
 
+void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
+{
+  NetworkPacket packet;
+  auto error_happened = false;
+  
+  // Create a new packet with the data 
+  packet.CreateDataPacket(_data, _dataSize, _type);
+  
+  
+  // Send signal
+  uint8_t* signal = new uint8_t[4];
+  std::memcpy(signal, "NAVI", 4);
+  writeRaw(signal, 4);
+  
+  // Send header
+  if ( (writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount()) == true))
+    {
+      print_msg("Successfully send header packet");
+    }
+  else
+    {
+      print_warning("Failure happened while trying to send header packet");
+      error_happened = true;
+    }
+  
+  
+  // Resend signal
+  writeRaw(signal, 4);
+
+  // Send body
+  if ( (writeRaw(packet.getbodyBytes(), packet.getbodyBytesCount()) == true ))
+    {
+      print_msg("Successfully send body packet");
+    }
+  else
+    {
+      print_warning("Failure happened while trying to send body packet");
+      error_happened = true;
+    }
+    
+}
+
 // Network WriteText bool function
 // Takes a std::string as input 
 // attempts to send the data to the connected socket
 // on succes true is returned, false is returned on error
-void Network::WriteText(std::string txt, std::string tag)
+void Network::WriteText(std::string _txt)
 {
   // Create packet container
   NetworkPacket packet;
   auto error_happened = false;
   
   // Create new packet with txt as data
-  packet.CreateTextPacket(txt, tag);
+  packet.CreateTextPacket(_txt);
 
   // Send signal
   uint8_t* signal = new uint8_t[4];
@@ -335,7 +397,7 @@ void Network::WriteText(std::string txt, std::string tag)
   // Send header
   if (debugFlag)
     {
-      std::cout << "[+] Sending " << packet.getheaderBytesCount() << " bytes to client" << std::endl;
+      std::cout << "[+] Sending " << (int) packet.getheaderBytesCount() << " bytes to client" << std::endl;
     }
   
   if ( (writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount())) == true)
@@ -435,22 +497,13 @@ void Network::CheckForCombinations()
 			}
 		      // Set value
 		      tp.setValue(strbuffer);
-		      
-		      strbuffer = "";
-		      for (auto n = 0; n<10;n++)
-			{
-			  strbuffer += ita->tag[n];
-			} 
-		      // Set tag
-		      tp.setTag(strbuffer);
-		      
+		      		      
 		      // Set id
 		      tp.setId(ita->dataId);
 
 		      if (debugFlag)
 			{
 			  print_msg("Adding text packets to queue");
-			  std::cout << "TAG " << tp.getTag() << std::endl;
 			  std::cout << "VAL " << tp.getValue()<< std::endl;
 			}
 		      
@@ -523,13 +576,12 @@ void Network::CheckForPackets()
 	{
 	  iterations_counted++;
 	  packet_found = false;
-	  pack_offset = 0;
 	  pack_offset_start = 0;
 	  bool HeaderPacketFound = false;
 	  bool BodyPacketFound   = false;
 
 
-	  for (auto n=0; n <=buffer_size ; n++)
+	  for (auto n=pack_offset; n <=buffer_size ; n++)
 	    {
 	      // check for overflow
 	      if ( (n + 4 ) > buffer_size)
@@ -562,6 +614,7 @@ void Network::CheckForPackets()
 
 	  if (debugFlag)
 	    std::cout << "packet_found=" << packet_found << "\t buffer[pack_offset] = " << (uint32_t) buffer[pack_offset] << " should be = " << sizeof(HeaderPacket) << std::endl;
+
 	  if ( ((packet_found) && buffer[pack_offset] == sizeof(HeaderPacket)))
 	    {
 	      // If n+4th byte is equal to the sizeof headerstructure
@@ -575,7 +628,7 @@ void Network::CheckForPackets()
 	      
 	      if (debugFlag)
 		{
-		  std::cout <<"[+]PACKET \t ID : " << hpacket.dataId << "\t TAG " << hpacket.tag << std::endl;
+		  std::cout <<"[+]PACKET \t ID : " << hpacket.dataId << std::endl;
 		}
 	      // Zero set memory
 	      // std::memset(&buffer[pack_offset_start-4], 0, sizeof(HeaderPacket)+4);
@@ -627,6 +680,7 @@ void Network::CheckForPackets()
 
 	      print_warning("Nothing matched, dumping buffer");
 	      DumpBuffer();
+	      isDone = true;
 	    }
 	}
       

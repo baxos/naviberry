@@ -20,6 +20,11 @@ extern "C"
 //struct sockaddr_in;
 
 
+#define TEXT_TYPE             0XFF
+#define SENSOR_TYPE           0XAA
+
+
+
 //===================================================================== network packet ================================== //
 // Network packet structs and class
 // this is used to by the network class to send data between client<->se
@@ -31,7 +36,6 @@ struct HEADER_PACKET
   uint16_t dataId;
   uint32_t dataSize;
   uint32_t bodyPacketSize;
-  uint8_t  tag[10];
 } typedef HeaderPacket;
 
 struct BODY_PACKET
@@ -80,8 +84,8 @@ public:
   uint8_t getheaderBytesCount() { return headerBytesCount; };
 
 
-  void CreateTextPacket(std::string txt, std::string tag);       // Create a body and header packet from a text string
-  void CreateBinaryPacket(uint8_t* val);        // Create a body and header packet from raw bytes
+  void CreateTextPacket(std::string txt);       // Create a body and header packet from a text string
+  void CreateDataPacket(uint8_t* _data, uint32_t _dataSize, uint8_t _type);        // Create a body and header packet from raw bytes
 };
 
 //===========================================================================================================================================================
@@ -116,7 +120,8 @@ public:                                         // Public functions
   bool SendTextPacket(std::string txt);
   bool SendBinaryPacket(uint8_t* data);
   void setBufferSize(uint32_t size);
-  void WriteText(std::string txt, std::string tag);              // Write data to a packet and send it to the client
+  void WriteText(std::string txt);              // Write data to a packet and send it to the client
+  void WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type);
   void Read();                       // Reads a packet of text data from the client
 
 
