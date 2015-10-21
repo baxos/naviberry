@@ -99,6 +99,7 @@ private:
   uint16_t port;                                // Port number
   uint8_t sockfd;                               // Socket file descriptor for listen
   uint8_t confd;                                // Socket file descriptor connected to client
+  bool connected;                             // Boolean value for whether the class is connected or not
   // uint32_t buffer_size;
   // uint8_t* buffer;
   // uint32_t buffer_offset;
@@ -116,14 +117,14 @@ public:                                         // Public functions
   bool Bind();                                  // Binds the socket, returns false on error and true on success
   bool Listen();                                // Listen on the socket, returns false on error and true on successs
   bool Accept();                                // Accept a connection attempt, returns false on error and true on success 
-  void DumpBuffer();
-  bool SendTextPacket(std::string txt);
-  bool SendBinaryPacket(uint8_t* data);
-  void setBufferSize(uint32_t size);
+  void DumpBuffer();                            // For debugging. Dumps the buffer to STDIO
+  bool SendTextPacket(std::string txt);         // Sends a text packet
+  bool SendBinaryPacket(uint8_t* data);         // Sends a binary packet 
+  void setBufferSize(uint32_t size);            // Re-allocate buffer size
   void WriteText(std::string txt);              // Write data to a packet and send it to the client
   void WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type);
-  void Read();                       // Reads a packet of text data from the client
-
+  void Read();                                  // Reads a packet of text data from the client
+  bool isConnected() { return connected; };
 
   void clearTextQueue() { TextPacketQueue.clear(); };
   std::list<TextPacket> getTextQueue(){ return TextPacketQueue;};

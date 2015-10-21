@@ -195,7 +195,8 @@ Network::Network(std::string _host, uint16_t _port)
   hostname = _host;
   port = _port;
 
-
+  // is not connected
+  connected = false;
 
   // which type of connection
   server_addr.sin_family = AF_INET;
@@ -311,6 +312,7 @@ bool Network::Accept()
     {
       // Success
       print_msg("Socket accepted");
+      connected = true;
       return true;
     }  
 }

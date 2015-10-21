@@ -120,12 +120,6 @@ int main()
   // Initialize networking
   Network net("localhost", 1000);
 
-  // Threads
-  std::thread hwThread (hwFunc);
-  std::thread senThread (senFunc, std::ref(soundSensor));
-  std::thread netThread (networkFunc, std::ref(net));
-  std::thread mapThread (mapFunc);
-
 
   //  SerialComm serial("/dev/ttyACM0");
   //  We are not using serial communication anyway..
@@ -163,6 +157,8 @@ int main()
       exit(-1);
     }
 
+  // make sure we are connected
+  while (net.isConnected() == false);
 
 
   // Keep loop-on as long as client wants
@@ -172,12 +168,13 @@ int main()
   std::string dist_reading = "-1";
   auto dist_lastRead = 0 ;
 
+  // The main threads
+  std::thread senThread (senFunc, std::ref(soundSensor));
+  std::thread netThread (networkFunc, std::ref(net));
 
   // Start the main threads
-  netThread.join();
-  hwThread.join();
   senThread.join();
-  mapThread.join();
+  netThread.join();
 
   while (prog_running)
     {
