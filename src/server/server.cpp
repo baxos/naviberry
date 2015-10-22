@@ -37,27 +37,47 @@ void rob_sleep(int x)
   std::this_thread::sleep_for(std::chrono::milliseconds(x));
 }
 
-void networkReadFunc()
+void networkReadFunc(Network& _net )
 {
-
+  // Just do reads
+  while (_net.isConnected())
+    {
+      _net.Read();
+    }
 }
 
-void networkPacketFunc()
+void networkPacketFunc(Network& _net)
 {
+  // just do compares
+  while (_net.isConnected())
+    {
+      _net.CheckForPackets();
 
+      _net.CheckForCombinations();
+    }
 }
 
-void networkWriteFunc()
+void networkWriteFunc(Network& _net)
 {
+  while (_net.isConnected())
+    {
+      // If anything in write queue
+      // Write it
 
+      // If queue
+      // .. Write
+
+      // Else 
+      // .. Do nothing
+    }
 }
 
 void networkFunc(Network& _net)
 {
   print_msg("network thread started");
-  std::thread readThread (networkReadFunc);
-  std::thread packetThread (networkPacketFunc);
-  std::thread writeThread (networkWriteFunc);
+  std::thread readThread (networkReadFunc, std::ref(_net));
+  std::thread packetThread (networkPacketFunc, std::ref(_net));
+  std::thread writeThread (networkWriteFunc, std::ref(_net));
 
 
   // Start up networking threads
@@ -202,18 +222,18 @@ int main()
 	  buffer = "";
 	  
 	  // Tell client we are waiting
-	  print_msg("Waiting for command..");
-	  net.WriteText(comm_REPLY_WAITING);
+	  //	  print_msg("Waiting for command..");
+	  //	  net.WriteText(comm_REPLY_WAITING);
 	  
 
 	  // Read from network, to network class buffer
-	  net.Read();
+	  //	  net.Read();
 
 	  // Check for packets
-	  net.CheckForPackets();
+	  //      net.CheckForPackets();
 
 	  // Check for combinations
-	  net.CheckForCombinations();
+	  //	  net.CheckForCombinations();
 
 
 	  print_msg("Checking textpacket queue");
