@@ -5,7 +5,7 @@ outputname = Navicon
 # the object files used
 objects = naviberryio.o comm.o navicon.o  cbuffer.o
 # compile flags
-CFLAGS = -lbcm2835 -std=c++0x -pthread -O0 -ggdb # -Werror -Wall
+CFLAGS = -lSDL2 -std=c++0x -pthread -O0 -ggdb # -Werror -Wall
 
 
 Navicon: $(objects)
