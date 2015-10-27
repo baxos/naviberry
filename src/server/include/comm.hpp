@@ -117,6 +117,7 @@ public:                                         // Public functions
   bool Bind();                                  // Binds the socket, returns false on error and true on success
   bool Listen();                                // Listen on the socket, returns false on error and true on successs
   bool Accept();                                // Accept a connection attempt, returns false on error and true on success 
+  bool Connect();                               // Connection attempt, returns false on error
   void DumpBuffer();                            // For debugging. Dumps the buffer to STDIO
   bool SendTextPacket(std::string txt);         // Sends a text packet
   bool SendBinaryPacket(uint8_t* data);         // Sends a binary packet 

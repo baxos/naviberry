@@ -292,7 +292,23 @@ bool Network::Listen()
     }
 }
 
-
+// Network Connect bool function
+// Tries to connect to the specified hostname and port
+// On success it returns true and the connection is ready
+// On failure it will return false
+bool Network::Connect()
+{
+  if ( (confd = connect(sockfd,(struct sockaddr *)  &server_addr, sizeof(server_addr)))== -1)
+    {
+      print_warning("Failed to connect");
+      return false;
+    }
+  else
+    {
+      print_msg("Connected to server");
+      return true;
+    }
+}
 
 
 // Network Accept bool function
