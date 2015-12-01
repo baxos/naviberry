@@ -37,61 +37,6 @@ void rob_sleep(int x)
   std::this_thread::sleep_for(std::chrono::milliseconds(x));
 }
 
-void networkReadFunc(Network& _net )
-{
-  // Just do reads
-  while (_net.isConnected())
-    {
-      _net.Read();
-    }
-}
-
-void networkPacketFunc(Network& _net)
-{
-  // just do compares
-  while (_net.isConnected())
-    {
-      _net.CheckForPackets();
-
-      _net.CheckForCombinations();
-    }
-}
-
-void networkWriteFunc(Network& _net)
-{
-  while (_net.isConnected())
-    {
-      // If anything in write queue
-      // Write it
-
-      // If queue
-      // .. Write
-
-      // Else 
-      // .. Do nothing
-    }
-}
-
-void networkFunc(Network& _net)
-{
-  print_msg("network thread started");
-  std::thread readThread (networkReadFunc, std::ref(_net));
-  std::thread packetThread (networkPacketFunc, std::ref(_net));
-  std::thread writeThread (networkWriteFunc, std::ref(_net));
-
-
-  // Start up networking threads
-  readThread.join();
-  packetThread.join();
-  writeThread.join();
-
-}
-
-void hwFunc()
-{
-  print_msg("hardware thread started");
-}
-
 void senFunc(SonicSensor& _sensor)
 {
   print_msg("sensor thread started");
@@ -116,10 +61,7 @@ void senFunc(SonicSensor& _sensor)
     }
 }
 
-void mapFunc()
-{
-  print_msg("map handler thread started");
-}
+
 
 int main()
 {
@@ -190,11 +132,11 @@ int main()
 
   // The main threads
   std::thread senThread (senFunc, std::ref(soundSensor));
-  std::thread netThread (networkFunc, std::ref(net));
+
 
   // Start the main threads
   senThread.join();
-  netThread.join();
+
 
   while (prog_running)
     {
@@ -216,24 +158,22 @@ int main()
 	}
       if (sched.getNetworkFlag())
 	{      
-	  
-
 	  // Zero set buffer for every run..
 	  buffer = "";
 	  
 	  // Tell client we are waiting
-	  //	  print_msg("Waiting for command..");
-	  //	  net.WriteText(comm_REPLY_WAITING);
+	  print_msg("Waiting for command..");
+	  net.WriteText(comm_REPLY_WAITING);
 	  
 
 	  // Read from network, to network class buffer
-	  //	  net.Read();
+	    net.Read();
 
 	  // Check for packets
-	  //      net.CheckForPackets();
+	  net.CheckForPackets();
 
 	  // Check for combinations
-	  //	  net.CheckForCombinations();
+	  net.CheckForCombinations();
 
 
 	  print_msg("Checking textpacket queue");
