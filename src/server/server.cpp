@@ -29,6 +29,7 @@ extern "C"
 #include "./include/scheduler.hpp"
 
 static std::string current_distance_reading_string = "";
+int32_t current_distance = -1;
 
 // change please!!!!!!!!!!!!!
 void rob_sleep(int x)
@@ -54,6 +55,7 @@ void senFunc(SonicSensor& _sensor)
 	}
 
       // Set to tring
+      current_distance = dist;
       current_distance_reading_string = std::to_string(dist);
 
       // sleep
@@ -135,7 +137,7 @@ int main()
 
 
   // Start the main threads
-  senThread.join();
+  //  senThread.join();
 
 
   while (prog_running)
@@ -178,12 +180,16 @@ int main()
 
 	  print_msg("Checking textpacket queue");
 	  // Parse network textpacket queue
+	  std::cout << "Queue count : " << net.getTextQueueCount() << std::endl;
+
+	  
 	  if (net.getTextQueueCount() > 0)
 	    {
 	      std::list<TextPacket> queue = net.getTextQueue();
 	      for (auto it = queue.begin(); it!=queue.end(); it++)
 		{
 		  std::cout << "Checking ID : " << it->dataId << "\t TAG : " << it->tag << std::endl;
+		  std::cout << "Value : " << it->value << std::endl;
 		  buffer = it->value;
 		  if (buffer.compare("CLIENT_DISCONNECT")==0)
 		    {
@@ -194,13 +200,10 @@ int main()
 		    }	  
 		  else if (buffer.compare("CLIENT_READ_SENSORS")==0)
 		    {
-		      std::cout << "Last distance measurement : " << dist_reading << std::endl;	      
-		      // Changed from WriteText(string) -> WriteData(data, size, type)
-		      // net.WriteText(dist_reading, senderSensor);
-		      // Convert to byte array
-		      uint8_t* rawBytes = new uint8_t[sizeof(dist_lastRead)];
-		      std::memset(&rawBytes[0], 0, sizeof(dist_lastRead));
-		      std::memcpy(&rawBytes[0], &dist_lastRead, sizeof(dist_lastRead));
+		      std::cout << "Last distance measurement : " << current_distance_reading_string << std::endl;	      
+		      uint8_t* rawBytes = new uint8_t[sizeof(current_distance)];
+		      std::memset(&rawBytes[0], 0, sizeof(current_distance));
+		      std::memcpy(&rawBytes[0], &current_distance, sizeof(current_distance));
 		      net.WriteData(rawBytes, sizeof(dist_lastRead), SENSOR_TYPE);
 		      delete rawBytes;
 		    }
@@ -251,6 +254,7 @@ int main()
 		   else if (buffer.compare("CLIENT_MOTORS_START")==0)
 		     {
 		       print_msg("Starting both motors..");
+		       exit(-1);
 		       motorA.Start();
 		       motorB.Start();
 		     }
