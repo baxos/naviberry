@@ -1,4 +1,5 @@
 #include <map>
+#include <iostream>
 #include "./mapping.hpp"
 
 
@@ -28,6 +29,7 @@ MapHandler::MapHandler(int _size)
   startpos.x = MapSize / 2;
   startpos.y = startpos.x;
   setPosition(startpos);
+  auto iterator_count = 0;
 
   for (auto ity = 0; ity<MapSize; ity++)
     {
@@ -42,10 +44,14 @@ MapHandler::MapHandler(int _size)
 	  // Set tile itx, ity type = unknown
 	  Point pos = { itx, ity };
 	  setTile(pos, TileType::Unknown);
+	  iterator_count++;
 	}
     }
+
+  std::cout << "Total count : " << std::to_string(iterator_count) << std::endl;
 }
 
+// Returns the given tilen bound to the point
 TileType MapHandler::getTile(Point _pt)
 {
   // If map contains the point return the value of tiletype
@@ -53,4 +59,35 @@ TileType MapHandler::getTile(Point _pt)
     {
       return Map[_pt];
     }
+  else
+    {
+      return TileType::None;
+    }
+}
+ 
+
+// Convert each datatype to raw bytes
+// and create a sequential array of the bytes
+// ready to send..
+uint8_t* MapHandler::getByteArray()
+{
+  uint8_t* arr = new uint8_t[50*50];
+  auto iterator_count  = 0;
+  for (auto ity=0; ity<50; ity++)
+    {
+      for (auto itx=0; itx<50; itx++)
+	{
+	  int pos = (ity * 50) + itx;
+	  Point pt;
+	  pt.x = itx;
+	  pt.y = ity;
+	  arr[pos] = uint8_t (getTile(pt)); 
+	  std::cout << std::to_string( arr[pos]) << ",\t";
+	  iterator_count++;
+	}
+    }
+
+
+  std::cout << std::endl << "Counts : " << std::to_string(iterator_count) << std::endl;
+  return arr;
 }

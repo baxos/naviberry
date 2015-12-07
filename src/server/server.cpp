@@ -27,6 +27,8 @@ extern "C"
 #include "./include/serial.hpp"
 #include "./include/sonicsensor.hpp"
 #include "./include/scheduler.hpp"
+#include "./include/mapping.hpp"
+
 
 static std::string current_distance_reading_string = "";
 int32_t current_distance = -1;
@@ -41,7 +43,7 @@ void rob_sleep(int x)
 void senFunc(SonicSensor& _sensor)
 {
   print_msg("sensor thread started");
-  const uint16_t freq = 5000; //  ms update frequency
+  const uint16_t freq = 500; //  ms update frequency
   while (true)
     {
       auto dist = _sensor.ReadDistance();
@@ -87,9 +89,11 @@ int main()
 
   //  SerialComm serial("/dev/ttyACM0");
   //  We are not using serial communication anyway..
-
+  // Scheduler
   Scheduler sched;
-  
+  MapHandler mapHandler(50);
+
+
   std::string senderServer = "SERVER";
   std::string senderSensor = "SENSOR";
 
@@ -164,12 +168,12 @@ int main()
 	  buffer = "";
 	  
 	  // Tell client we are waiting
-	  print_msg("Waiting for command..");
-	  net.WriteText(comm_REPLY_WAITING);
+	  // print_msg("Waiting for command..");
+	  // net.WriteText(comm_REPLY_WAITING);
 	  
 
 	  // Read from network, to network class buffer
-	    net.Read();
+	  net.Read();
 
 	  // Check for packets
 	  net.CheckForPackets();
@@ -191,6 +195,9 @@ int main()
 		  std::cout << "Checking ID : " << it->dataId << "\t TAG : " << it->tag << std::endl;
 		  std::cout << "Value : " << it->value << std::endl;
 		  buffer = it->value;
+		  
+		  auto a = buffer.compare("CLIENT_PING");
+
 		  if (buffer.compare("CLIENT_DISCONNECT")==0)
 		    {
 		      print_warning("Recieved DISONNECT signal, closing down");
@@ -331,6 +338,17 @@ int main()
 		       // Set motor stae back to origin
 		       motorA.setDirection(mota_dir);
 		       motorB.setDirection(motb_dir);
+		     }
+		   else if (buffer.compare("CLIENT_DOWNLOAD_MAP")==0)
+		     {
+		       // Map size is 50x50
+		       uint8_t* data = mapHandler.getByteArray();
+		       net.WriteData(data, 50, 4);
+		     }
+		   else if (buffer.compare("CLIENT_PING_READ")==0)
+		     {
+		       net.WriteText("PONG");
+		       exit(1);
 		     }
 		   else
 		     {

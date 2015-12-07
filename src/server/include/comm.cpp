@@ -6,10 +6,12 @@
 #include <iostream>
 #include <list>
 #include <iomanip>
+#include <cstdio>
 extern "C"
 {
 #include <sys/types.h>
 #include <sys/socket.h>
+
 }
 // Use of project libraries
 #include "comm.hpp"
@@ -118,7 +120,8 @@ void NetworkPacket::CreateDataPacket(uint8_t* _data, uint32_t _dataSize, uint8_t
 	"HeaderPacket.packetSize \t : " << (int) sizeof(HeaderPacket) << std::endl <<
 	"HeaderPacket.dataType   \t : " << (uint16_t) hpacket.dataType << std::endl <<
 	"HeaderPacket.dataSize   \t : " << (uint32_t) hpacket.dataSize << std::endl;
-    }
+
+  }
 
   // raw byte copy of header packet
   headerBytesCount = sizeof(HeaderPacket);
@@ -130,6 +133,8 @@ void NetworkPacket::CreateDataPacket(uint8_t* _data, uint32_t _dataSize, uint8_t
   bodyBytesCount = hpacket.bodyPacketSize;
   bodyBytes      = new uint8_t[bodyBytesCount];
   std::memcpy(&bodyBytes[0], &bpacket, bodyBytesCount);
+
+  print_msg("Packets constructed");
 }
 
 void NetworkPacket::CreateTextPacket(std::string txt)
@@ -318,7 +323,8 @@ bool Network::Connect()
 // and it will return true, otherwise false is returned
 bool Network::Accept()
 {
-  if ( (confd = accept(sockfd,NULL,NULL)) == -1)
+  confd = accept(sockfd, NULL, NULL);
+  if (confd ==  -1)
     {
       // Error
       print_warning("Failed to accept socket");
@@ -337,17 +343,19 @@ bool Network::Accept()
 
 bool Network::writeRaw(uint8_t* val, size_t len)
 {
-  
   auto n = send(confd, val, len, 0);
   if ( n == -1 )
     {
       // Error
+      std::cout << std::strerror(errno) << std::endl;
       print_error("Error sending raw bytes.");
-    }
+      return false;
+   }
   else
     {
       // Success
       print_msg("Successfully send raw data");
+      return true;
     }
 }
 
@@ -363,8 +371,18 @@ void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
   
   // Send signal
   uint8_t* signal = new uint8_t[4];
+  if (signal == nullptr)
+    {
+      print_error("Memory error");
+    }
+  else
+    {
+      
+    }
   std::memcpy(signal, "NAVI", 4);
   writeRaw(signal, 4);
+
+
   
   // Send header
   if ( (writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount()) == true))
@@ -696,8 +714,8 @@ void Network::CheckForPackets()
 	  else
 	    {
 
-	      print_warning("Nothing matched, dumping buffer");
-	      DumpBuffer();
+	      // print_warning("Nothing matched, dumping buffer");
+	      // DumpBuffer();
 	      isDone = true;
 	    }
 	}

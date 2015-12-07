@@ -105,7 +105,7 @@ int SonicSensor::ReadDistance()
 	{
 	  if (debugFlag)
 	    {
-	      std::cout << "TIME READ : " << time_used << " microSeconds \t distance : " << distance << " cm" << std::endl;
+	      // std::cout << "TIME READ : " << time_used << " microSeconds \t distance : " << distance << " cm" << std::endl;
 	    }
 	  bad_read = false;
 

@@ -38,8 +38,8 @@ serial.o:
 scheduler.o:	./include/scheduler.cpp ./include/scheduler.hpp
 	g++ -c ./include/scheduler.cpp $(CFLAGS)
 
-mapping.o:	./include/navimapping.cpp ./include/navimapping.hpp
-	g++ -c ./include/navimapping.cpp $(CFLAGS)
+mapping.o:	./include/mapping.cpp ./include/mapping.hpp
+	g++ -c ./include/mapping.cpp $(CFLAGS)
 
 .PHONY : clean
 clean : 
