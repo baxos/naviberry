@@ -1,7 +1,7 @@
 #include <map>
 #include <iostream>
 #include "./mapping.hpp"
-
+#include "./naviberryio.hpp"
 
 
 // Sets the specific point to the given type
@@ -72,15 +72,16 @@ TileType MapHandler::getTile(Point _pt)
 uint8_t* MapHandler::getByteArray()
 {
   uint8_t* arr = new uint8_t[50*50];
+  if (arr == nullptr)
+    print_error("Memory error");
+
   auto iterator_count  = 0;
   for (auto ity=0; ity<50; ity++)
     {
       for (auto itx=0; itx<50; itx++)
 	{
 	  int pos = (ity * 50) + itx;
-	  Point pt;
-	  pt.x = itx;
-	  pt.y = ity;
+	  Point pt { itx, ity };
 	  arr[pos] = uint8_t (getTile(pt)); 
 	  std::cout << std::to_string( arr[pos]) << ",\t";
 	  iterator_count++;

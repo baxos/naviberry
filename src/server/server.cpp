@@ -343,12 +343,11 @@ int main()
 		     {
 		       // Map size is 50x50
 		       uint8_t* data = mapHandler.getByteArray();
-		       net.WriteData(data, 50, 4);
+		       net.WriteData(data, 2000, MAP_TYPE);
 		     }
 		   else if (buffer.compare("CLIENT_PING_READ")==0)
 		     {
 		       net.WriteText("PONG");
-		       exit(1);
 		     }
 		   else
 		     {

@@ -42,3 +42,18 @@ void print_error(std::string error)
   std::cout << "[-] " << error << TXT_DEF << std::endl;
   exit(-1);
 }
+
+uint8_t* NaviberryIO::reserveBytes(uint32_t _size)
+{
+  uint8_t* data = new uint8_t[_size];
+
+  if (data == nullptr)
+    {
+      // error
+      print_error("Memory problems");
+    }
+  else
+    {
+      return data;
+    }
+}

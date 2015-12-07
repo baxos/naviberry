@@ -112,6 +112,10 @@ void NetworkPacket::CreateDataPacket(uint8_t* _data, uint32_t _dataSize, uint8_t
   bpacket.packetSize     = hpacket.bodyPacketSize;
   bpacket.dataId         = dataId;
   // Copy data to the structure
+  if (_dataSize > 4096)
+    {
+      print_error("Max data size is : 4096 bytes");
+    }
   memcpy(&bpacket.data[0], &_data[0], _dataSize);
 	
   if (debugFlag)
@@ -385,7 +389,8 @@ void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
 
   
   // Send header
-  if ( (writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount()) == true))
+  auto write_check = writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount());
+  if ( (write_check) == true)
     {
       print_msg("Successfully send header packet");
     }
@@ -398,9 +403,10 @@ void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
   
   // Resend signal
   writeRaw(signal, 4);
-
+  
   // Send body
-  if ( (writeRaw(packet.getbodyBytes(), packet.getbodyBytesCount()) == true ))
+  write_check = writeRaw(packet.getbodyBytes(), packet.getbodyBytesCount());
+  if (write_check == true)
     {
       print_msg("Successfully send body packet");
     }

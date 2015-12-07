@@ -22,7 +22,7 @@ extern "C"
 
 #define TEXT_TYPE             0XFF
 #define SENSOR_TYPE           0XAA
-
+#define MAP_TYPE              0xBB
 
 
 //===================================================================== network packet ================================== //
@@ -42,7 +42,7 @@ struct BODY_PACKET
 {
   uint32_t packetSize;
   uint16_t dataId;
-  uint8_t data[1024];
+  uint8_t data[4096];
 } typedef BodyPacket;
 
 class TextPacket
