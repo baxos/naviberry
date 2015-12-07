@@ -33,6 +33,11 @@ extern "C"
 static std::string current_distance_reading_string = "";
 int32_t current_distance = -1;
 
+// Atomic booleans for keeping the threads running, or closing them.
+std::atomic_bool sensorThreadRun;
+std::atomic_bool mapmodeThreadRun;
+
+
 // change please!!!!!!!!!!!!!
 void rob_sleep(int x)
 {
@@ -40,11 +45,38 @@ void rob_sleep(int x)
   std::this_thread::sleep_for(std::chrono::milliseconds(x));
 }
 
+void mapmodeFunc()
+{
+  // setup, initialize
+  mapmodeThreadRun = true;
+  const uint16_t freq = 1000;
+  
+  print_msg("Map mode thread, started and running");
+
+
+  while (mapmodeThreadRun)
+    {
+      print_msg("Map mode..");
+ 
+      // Check distance:
+      // if distance greater than 20
+      //     Drive forward
+      //     goto Check distance
+      // else
+      //     update map
+      //     turn left OR turn right
+      //     goto Check distance
+
+      rob_sleep(freq);
+   }
+}
+
 void senFunc(SonicSensor& _sensor)
 {
   print_msg("sensor thread started");
   const uint16_t freq = 500; //  ms update frequency
-  while (true)
+  sensorThreadRun = true;
+  while (sensorThreadRun)
     {
       auto dist = _sensor.ReadDistance();
       if (dist == -1)
@@ -63,6 +95,8 @@ void senFunc(SonicSensor& _sensor)
       // sleep
       rob_sleep(freq);
     }
+
+  print_warning("Sensor thread stopped");
 }
 
 
@@ -86,16 +120,16 @@ int main()
   // Initialize networking
   Network net("localhost", 1000);
 
+  // Initialize atomic variables
+  sensorThreadRun = false;
+  mapmodeThreadRun = false;
+
 
   //  SerialComm serial("/dev/ttyACM0");
   //  We are not using serial communication anyway..
   // Scheduler
   Scheduler sched;
   MapHandler mapHandler(50);
-
-
-  std::string senderServer = "SERVER";
-  std::string senderSensor = "SENSOR";
 
 
   // Setup network connection  
@@ -138,10 +172,6 @@ int main()
 
   // The main threads
   std::thread senThread (senFunc, std::ref(soundSensor));
-
-
-  // Start the main threads
-  //  senThread.join();
 
 
   while (prog_running)
@@ -349,6 +379,19 @@ int main()
 		     {
 		       net.WriteText("PONG");
 		     }
+		   else if(buffer.compare("CLIENT_MAP_MODE_START")==0)
+		     {
+		       if (mapmodeThreadRun.load() == false)
+			 {
+			   print_warning("Starting map mode");
+			   std::thread mapmodeThread (mapmodeFunc);
+			   mapmodeThread.detach();
+			 }
+		     }
+		   else if(buffer.compare("CLIENT_MAP_MODE_STOP")==0)
+		     {
+		       mapmodeThreadRun.store(false);
+		     }
 		   else
 		     {
 		       print_warning("Unknown message recived :");
@@ -371,6 +414,11 @@ int main()
 	  sched.resetNetworkFlag();
 	}     
     }
+  
+  // Exit threads
+  sensorThreadRun = false;
+  senThread.join();
+
   
   // just exit
   return EXIT_SUCCESS;
