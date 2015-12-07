@@ -3,7 +3,7 @@
 # Name of binary executable 
 outputname = Naviberry
 # the object files used
-objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o serial.o sonicsensor.o scheduler.o cbuffer.o
+objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o serial.o sonicsensor.o scheduler.o cbuffer.o mapping.o
 # compile flags
 CFLAGS = -lbcm2835 -std=c++0x -pthread -O0 -ggdb # -Werror -Wall
 
@@ -37,6 +37,9 @@ serial.o:
 
 scheduler.o:	./include/scheduler.cpp ./include/scheduler.hpp
 	g++ -c ./include/scheduler.cpp $(CFLAGS)
+
+mapping.o:	./include/navimapping.cpp ./include/navimapping.hpp
+	g++ -c ./include/navimapping.cpp $(CFLAGS)
 
 .PHONY : clean
 clean : 
