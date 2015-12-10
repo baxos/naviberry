@@ -4,6 +4,7 @@
 #include "./naviberryio.hpp"
 
 
+
 // Sets the specific point to the given type
 void MapHandler::setTile(Point _pt, TileType _type)
 {

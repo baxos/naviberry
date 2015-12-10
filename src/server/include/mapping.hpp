@@ -14,6 +14,8 @@ struct Point
 static bool operator< (Point a, Point b) { return std::make_pair(a.x, a.y) < std::make_pair(b.x,b.y) ; }
 
 enum class TileType { Unknown, Empty, Blocked, None };
+enum class MachineState { Standby, Forward, Backward, TurnRight, TurnLeft, ReadSensor };
+
 
 class MapHandler
 {

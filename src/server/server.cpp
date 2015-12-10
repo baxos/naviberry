@@ -50,14 +50,14 @@ void mapmodeFunc()
   // setup, initialize
   mapmodeThreadRun = true;
   const uint16_t freq = 1000;
-  
+  MachineState state = MachineState::Standby;
+
   print_msg("Map mode thread, started and running");
 
 
   while (mapmodeThreadRun)
     {
       print_msg("Map mode..");
- 
       // Check distance:
       // if distance greater than 20
       //     Drive forward
@@ -66,6 +66,46 @@ void mapmodeFunc()
       //     update map
       //     turn left OR turn right
       //     goto Check distance
+
+      // Do the logic for setting the current state
+      auto distance = current_distance;
+      state = MachineState::Standby;
+
+      if (distance > 20)
+	{
+	  state = MachineState::Forward;
+	}
+      else if(distance < 20 && distance > 3)
+	{
+	  // Set map target
+	  
+	  // Set state
+	  state = MachineState::TurnRight;
+	}
+      else
+	{
+	  // Abort, failure has happened halt everything
+	}
+
+
+      // Handle the current state
+      switch (state)
+	{
+	case MachineState::Standby:
+	  // Do nothing
+	  print_msg("Standing by..");
+	  break;
+	case MachineState::Forward:
+	  // Drive forward
+	  print_msg("Driving forward");
+	  break;
+	case MachineState::TurnRight:
+	  // Turn right
+	  print_msg("Turning right");
+	  break;
+
+	}
+
 
       rob_sleep(freq);
    }
