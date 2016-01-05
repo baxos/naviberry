@@ -10,6 +10,11 @@ struct Point
   int32_t y;
 };
 
+struct uint8Point
+{
+  uint8_t x;
+  uint8_t y;
+};
 
 static bool operator< (Point a, Point b) { return std::make_pair(a.x, a.y) < std::make_pair(b.x,b.y) ; }
 

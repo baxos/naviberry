@@ -67,14 +67,36 @@ TileType MapHandler::getTile(Point _pt)
 }
  
 
+// Return the byte array of the data structure
+// uint8 mapsize     [ eg : 50       ]
+// uint8 pos_x       [ eg : [0..50]  ]
+// uint8 pos_y       [ eg : [0..50]  ]
+// uint8[mapsize^2]  [ eg : [b,b,b..b]
 // Convert each datatype to raw bytes
 // and create a sequential array of the bytes
 // ready to send..
 uint8_t* MapHandler::getByteArray()
 {
-  uint8_t* arr = new uint8_t[50*50];
+  auto offset = 0;
+  uint8_t* arr = new uint8_t[(50*50) + 3];
+  
+  // Check data
   if (arr == nullptr)
     print_error("Memory error");
+  
+  auto pos =  getPosition();
+
+  // Set mapsize
+  arr[offset] = 50;
+  offset++;
+  // set position x
+  // dangerous typecast
+  arr[offset] = (uint8_t) pos.x;
+  offset++;
+  // set position y
+  // dangerous typecast
+  arr[offset] = (uint8_t) pos.y;
+  offset++;
 
   auto iterator_count  = 0;
   for (auto ity=0; ity<50; ity++)
@@ -83,7 +105,7 @@ uint8_t* MapHandler::getByteArray()
 	{
 	  int pos = (ity * 50) + itx;
 	  Point pt { itx, ity };
-	  arr[pos] = uint8_t (getTile(pt)); 
+	  arr[pos+offset] = uint8_t (getTile(pt)); 
 	  std::cout << std::to_string( arr[pos]) << ",\t";
 	  iterator_count++;
 	}

@@ -169,34 +169,6 @@ int main()
   Scheduler sched;
   MapHandler mapHandler(50);
 
-  /*
-  // Setup network connection  
-  // Craete socket
-  // How about make this in one function??
-  if (!net.Create())
-    {
-      print_error("Error trying to create socket");
-      exit(-1);
-    }
-  // Bind socket
-  if (!net.Bind())
-    {
-      print_error("Error trying to create socket");
-      exit(-1);
-    }
-  // Listen on socket
-  if (!net.Listen())
-    {
-      print_error("Error trying to listen on socket");
-      exit(-1);
-    }
-  // Accept connection
-  if (!net.Accept())
-    {
-      print_error("Error accepting connection");
-      exit(-1);
-    }
-  */
 
 
   // New method to create server connection
@@ -206,6 +178,7 @@ int main()
     }
 
   // make sure we are connected
+  // will hang until we are connected
   while (net.isConnected() == false);
 
 
@@ -229,11 +202,6 @@ int main()
 	  // Zero set buffer for every run..
 	  buffer = "";
 	  
-	  // Tell client we are waiting
-	  // print_msg("Waiting for command..");
-	  // net.WriteText(comm_REPLY_WAITING);
-	  
-
 	  // Read from network, to network class buffer
 	  net.Read();
 
