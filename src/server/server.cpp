@@ -165,13 +165,11 @@ int main()
   mapmodeThreadRun = false;
 
 
-  //  SerialComm serial("/dev/ttyACM0");
-  //  We are not using serial communication anyway..
   // Scheduler
   Scheduler sched;
   MapHandler mapHandler(50);
 
-
+  /*
   // Setup network connection  
   // Craete socket
   // How about make this in one function??
@@ -198,6 +196,14 @@ int main()
       print_error("Error accepting connection");
       exit(-1);
     }
+  */
+
+
+  // New method to create server connection
+  if (net.CreateServer() == true)
+    {
+      print_msg("Connection is setup");
+    }
 
   // make sure we are connected
   while (net.isConnected() == false);
@@ -218,20 +224,6 @@ int main()
     {
       sched.Update();
 
-
-      if (sched.getHardwareFlag())
-	{
-
-
-
-
-	  sched.resetHardwareFlag();
-	}
-      if (sched.getSensorFlag())
-	{
-
-	  sched.resetSensorFlag();
-	}
       if (sched.getNetworkFlag())
 	{      
 	  // Zero set buffer for every run..
@@ -437,27 +429,28 @@ int main()
 		       print_warning("Unknown message recived :");
 		       print_warning(buffer);    
 		     }
-		  
-		  // Qucik fix!
-		  // net.removeTextQueue(it);
-		  
 		}
 	      
 	      print_msg("Clearing text packet queue");
+	      
 	      // We processed all element, now clear queue
 	      net.clearTextQueue();
 	      
 	    }  
-	  // We processed all 
 	  
 	  // Reset flag
 	  sched.resetNetworkFlag();
 	}     
     }
   
+
+
   // Exit threads
   sensorThreadRun = false;
   senThread.join();
+
+  mapmodeThreadRun = false;
+
 
   
   // just exit

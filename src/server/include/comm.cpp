@@ -240,6 +240,55 @@ void Network::setBufferSize(uint32_t size)
   */
 }
 
+bool Network::CreateServer()
+{
+  bool success = true;
+
+  // Create socket
+  if (Create() == true)
+    {
+      // Next
+    }
+  else
+    {
+      success = false;
+    }
+
+
+  // Bind to address
+  if (Bind() == true)
+    {
+      // Next
+    }
+  else
+    {
+      success = false;
+    }
+
+  // Listen for incoming calls
+  if (Listen() == true)
+    {
+      // Next
+    }
+  else
+    {
+      success = false;
+    }
+
+  // Accept any calls
+  if (Accept() == true)
+    {
+      // Do nothing
+    }
+  else
+    {
+      success = false;
+    }
+
+  // Return the definition of success
+  return success;
+}
+
 // Network Create bool function
 // Attempts to create a socket
 // return true on sucess nd false on error
