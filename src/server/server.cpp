@@ -18,6 +18,7 @@ extern "C"
 {
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <signal.h>
 #include "./include/bcm2835.h"
 }
 #include "./include/comm.hpp"
@@ -44,6 +45,16 @@ void rob_sleep(int x)
   print_msg("Sleep called");
   std::this_thread::sleep_for(std::chrono::milliseconds(x));
 }
+
+
+void signal_callback_handle(int _signalnum)
+{
+  if ( _signalnum == 2)
+    {
+      print_error("Interrupt signal recieved, CTRL-C pressed, closing down..");
+    }
+}
+
 
 void mapmodeFunc()
 {
@@ -151,6 +162,10 @@ int main()
       print_error("BCM2835 failed to initialize.\n");
       exit(-1);
     }
+
+  // We take care of the signals
+  signal(SIGINT, signal_callback_handle);
+
 
   // Initialize hardware
   DC_Motor motorA(PIN11, PIN13, PIN15);
