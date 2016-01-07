@@ -38,7 +38,6 @@ int32_t current_distance = -1;
 std::atomic_bool sensorThreadRun;
 std::atomic_bool mapmodeThreadRun;
 
-
 // change please!!!!!!!!!!!!!
 void rob_sleep(int x)
 {
@@ -55,13 +54,73 @@ void signal_callback_handle(int _signalnum)
     }
 }
 
+Direction UpdateDirectionByTurn(Direction _currentDirection, Direction _turn)
+{
+  switch (_turn)
+    {
+    case Direction::Right:
+      switch(_currentDirection)
+	{
+	case Direction::Up:
+	  _currentDirection = Direction::Right;
+	  break;
+	case Direction::Right:
+	  _currentDirection = Direction::Down;
+	  break;
+	case Direction::Down:
+	  _currentDirection = Direction::Left;
+	  break;
+	case Direction::Left:
+	  _currentDirection = Direction::Up;
+	  break;
+	}
+      break;
+    case Direction::Left:
+      switch(_currentDirection)
+	{
+	case Direction::Up:
+	  _currentDirection = Direction::Left;
+	  break;
+	case Direction::Left:
+	  _currentDirection = Direction::Down;
+	  break;
+	case Direction::Down:
+	  _currentDirection = Direction::Right;
+	  break;
+	case Direction::Right:
+	  _currentDirection = Direction::Up;
+	    break;
+	}
+      break;
+    }
+}
 
-void mapmodeFunc()
+Point IncreasePointByDirection(Point _pt, Direction _dir)
+{
+  switch(_dir)
+    {
+    case Direction::Up:
+      _pt.y--;
+      break;
+    case Direction::Down:
+      _pt.y++;
+      break;
+    case Direction::Right:
+      _pt.x++;
+      break;
+    case Direction::Left:
+      _pt.x--;
+      break;
+    }
+}
+
+void mapmodeFunc(MapHandler maphandler)
 {
   // setup, initialize
   mapmodeThreadRun = true;
-  const uint16_t freq = 1000;
+  const uint16_t freq = 5000;
   MachineState state = MachineState::Standby;
+  Direction direction = Direction::Up;
 
   print_msg("Map mode thread, started and running");
 
@@ -84,11 +143,25 @@ void mapmodeFunc()
 
       if (distance > 20)
 	{
+	  // update position
+	  Point pos = maphandler.getPosition();
+	  pos = IncreasePointByDirection(pos, direction);
+	  maphandler.setPosition(pos);
+	  
+	  // set mapp as free
+	  maphandler.setTile(maphandler.getPosition(), TileType::Free);
+
+	  // Set state
 	  state = MachineState::Forward;
+	  
 	}
       else if(distance < 20 && distance > 3)
 	{
-	  // Set map target
+	  // Set map+1 as block
+	  Point pos = maphandler.getPosition();
+	  pos = IncreasePointByDirection(pos, direction);
+	  // dont update position to handler
+	  maphandler.setTile(pos, TileType::Block);
 	  
 	  // Set state
 	  state = MachineState::TurnRight;
@@ -112,6 +185,7 @@ void mapmodeFunc()
 	  break;
 	case MachineState::TurnRight:
 	  // Turn right
+	  direction = UpdateDirectionByTurn(direction, Direction::Right);
 	  print_msg("Turning right");
 	  break;
 
@@ -399,7 +473,7 @@ int main()
 		       if (mapmodeThreadRun.load() == false)
 			 {
 			   print_warning("Starting map mode");
-			   std::thread mapmodeThread (mapmodeFunc);
+			   std::thread mapmodeThread (mapmodeFunc, std::ref(mapHandler));
 			   mapmodeThread.detach();
 			 }
 		     }
