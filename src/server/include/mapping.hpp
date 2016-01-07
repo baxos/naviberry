@@ -35,6 +35,7 @@ public:
   MapHandler(int32_t _size);
   Point getPosition() { return CurrentPosition; };
   TileType getTile(Point _pt);
+  uint32_t getDataSize() { return (MapSize*MapSize) + 3; };
   uint8_t* getByteArray();
 };
 

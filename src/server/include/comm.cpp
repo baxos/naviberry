@@ -18,7 +18,7 @@ extern "C"
 #include "naviberryio.hpp"
 
 // For debugging
-bool debugFlag = true;
+bool debugFlag = false;
 
 
 // ===================================== TextPacket ==================== //
@@ -70,7 +70,9 @@ NetworkPacket::NetworkPacket()
 // if data is filled, free it
 NetworkPacket::~NetworkPacket()
 {
+  if(debugFlag)
   print_warning("Packet deconstructor called");
+
   if (idMap.count(dataId) == true)
     {
       idMap.erase(dataId);
@@ -138,7 +140,8 @@ void NetworkPacket::CreateDataPacket(uint8_t* _data, uint32_t _dataSize, uint8_t
   bodyBytes      = new uint8_t[bodyBytesCount];
   std::memcpy(&bodyBytes[0], &bpacket, bodyBytesCount);
 
-  print_msg("Packets constructed");
+  if(debugFlag)
+    print_msg("Packets constructed");
 }
 
 void NetworkPacket::CreateTextPacket(std::string txt)
@@ -179,7 +182,8 @@ void NetworkPacket::CreateTextPacket(std::string txt)
   std::memcpy(bodyBytes, &bpacket, bodyBytesCount);
   
 
-  print_msg("Packet created");
+  if (debugFlag)
+    print_msg("Packet created");
 }
 
 
@@ -407,7 +411,10 @@ bool Network::writeRaw(uint8_t* val, size_t len)
   else
     {
       // Success
-      print_msg("Successfully send raw data");
+      if (debugFlag)
+	print_msg("Successfully send raw data");
+
+
       return true;
     }
 }
@@ -441,7 +448,8 @@ void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
   auto write_check = writeRaw(packet.getheaderBytes(), packet.getheaderBytesCount());
   if ( (write_check) == true)
     {
-      print_msg("Successfully send header packet");
+      if (debugFlag)
+	print_msg("Successfully send header packet");
     }
   else
     {
@@ -457,7 +465,8 @@ void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
   write_check = writeRaw(packet.getbodyBytes(), packet.getbodyBytesCount());
   if (write_check == true)
     {
-      print_msg("Successfully send body packet");
+      if (debugFlag)
+	print_msg("Successfully send body packet");
     }
   else
     {
@@ -522,7 +531,8 @@ void Network::WriteText(std::string _txt)
 
   if ( error_happened == false)
     {
-      print_msg("Successfully send package");
+      if (debugFlag)
+	print_msg("Successfully send package");
     }
   else
     {
@@ -601,8 +611,8 @@ void Network::CheckForCombinations()
 		      // Add to list
 		      TextPacketQueue.push_back(tp);
 		      
-		      
-		      print_msg("Removing elements from open list");
+		      if (debugFlag)
+			print_msg("Removing elements from open list");
 		      // Remove elements from list
 		      ita = openHeaderPackets.erase(ita);
 		      itb = openBodyPackets.erase(itb);
@@ -677,7 +687,8 @@ void Network::CheckForPackets()
 	      // check for overflow
 	      if ( (n + 4 ) > buffer_size)
 		{
-		  print_msg("Iterated through buffer");
+		  if (debugFlag)
+		    print_msg("Iterated through buffer");
 		  isDone = true;
 		  break;
 		}
@@ -685,15 +696,22 @@ void Network::CheckForPackets()
 	      if ( buffer[n] == 'N' && buffer[n+1] == 'A' && buffer[n+2] == 'V' && buffer[n+3] == 'I')
 		{
 		  // Found packet
-		  std::cout << "Signature bytes found on offset " << n << std::endl;
+		  if (debugFlag)
+		    std::cout << "Signature bytes found on offset " << n << std::endl;
 		  if (buffer[n+4] == sizeof(HeaderPacket))
 		    {
-		      print_msg("Packet is a headerpacket");
+		      if (debugFlag)
+			print_msg("Packet is a headerpacket");
+
+		      // Header packet found
 		      HeaderPacketFound = true;
 		    }
 		    else
 		      {
-			print_msg("Packet is a body packet");
+			if(debugFlag)
+			  print_msg("Packet is a body packet");
+
+			// Body packet found
 			BodyPacketFound = true;
 		      }
 		  packet_found      = true;
@@ -737,7 +755,9 @@ void Network::CheckForPackets()
 
 
 	      pack_offset += sizeof(uint32_t);
-	      std::cout << "Pack size : " << packSize << std::endl;
+
+	      if (debugFlag)
+		std::cout << "Pack size : " << packSize << std::endl;
 
 	      if (packSize > 6)
 		{
@@ -758,12 +778,16 @@ void Network::CheckForPackets()
 		  cbuffer->RemoveAt(pack_offset_start-4, bpacket.packetSize+4);
 		  
 		  // Add to open list
-		  print_msg("Adding body packet to open list");
+		  if (debugFlag)
+		    print_msg("Adding body packet to open list");
+
+		  // Add to list
 		  openBodyPackets.push_back(bpacket);
 		}
 	      else
 		{
-		  print_msg("Data does not match a packet");
+		  if (debugFlag)
+		    print_msg("Data does not match a packet");
 		}
 	    } 
 	  else
@@ -805,9 +829,14 @@ void Network::Read(void)
   else
     {
       // Success
-      std::cout << "[+] Recieved : " << n << " data from server" << std::endl;
+      if (debugFlag)
+	std::cout << "[+] Recieved : " << n << " data from server" << std::endl;
+
+
       cbuffer->Add(local_buffer, (uint32_t) n);
-      print_msg("Added data to buffer");
+      if (debugFlag)
+	print_msg("Added data to buffer");
+
       /*for (auto i = 0; i < n; i++)
 	{
 	  // Check for overflow
@@ -827,5 +856,6 @@ void Network::Read(void)
       */
     }
 
-  print_msg("Return call");
+  if (debugFlag)
+    print_msg("Return call");
 }

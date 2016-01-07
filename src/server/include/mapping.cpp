@@ -8,13 +8,24 @@
 // Sets the specific point to the given type
 void MapHandler::setTile(Point _pt, TileType _type)
 {
-  Map.insert(std::make_pair(_pt, _type));
+  if (Map.count(_pt))
+    {
+      print_warning("Changing map tile");
+      Map[_pt] = _type;
+    }
+  else
+    {
+      Map.insert(std::make_pair(_pt, _type));
+    }
 }
 
 // Sets the current position of the robot on the map
 void MapHandler::setPosition(Point _newpt)
 {
+  std::cout << "X" << _newpt.x << "\t Y" << _newpt.y << std::endl;
   CurrentPosition = _newpt;
+  print_warning("New position set");
+  std::cout << "X " << CurrentPosition.x << "\t Y " << CurrentPosition.y << std::endl;
 }
 
 // Class initializer
@@ -106,6 +117,8 @@ uint8_t* MapHandler::getByteArray()
 	  int pos = (ity * 50) + itx;
 	  Point pt { itx, ity };
 	  arr[pos+offset] = uint8_t (getTile(pt)); 
+
+
 	  std::cout << std::to_string( arr[pos]) << ",\t";
 	  iterator_count++;
 	}

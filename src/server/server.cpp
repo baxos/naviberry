@@ -34,6 +34,8 @@ extern "C"
 static std::string current_distance_reading_string = "";
 int32_t current_distance = -1;
 
+extern bool debugFlag;
+
 // Atomic booleans for keeping the threads running, or closing them.
 std::atomic_bool sensorThreadRun;
 std::atomic_bool mapmodeThreadRun;
@@ -41,7 +43,9 @@ std::atomic_bool mapmodeThreadRun;
 // change please!!!!!!!!!!!!!
 void rob_sleep(int x)
 {
-  print_msg("Sleep called");
+  if (debugFlag)
+    print_msg("Sleep called");
+
   std::this_thread::sleep_for(std::chrono::milliseconds(x));
 }
 
@@ -93,6 +97,8 @@ Direction UpdateDirectionByTurn(Direction _currentDirection, Direction _turn)
 	}
       break;
     }
+
+  return _currentDirection;
 }
 
 Point IncreasePointByDirection(Point _pt, Direction _dir)
@@ -112,9 +118,11 @@ Point IncreasePointByDirection(Point _pt, Direction _dir)
       _pt.x--;
       break;
     }
+
+  return _pt;
 }
 
-void mapmodeFunc(MapHandler maphandler)
+void mapmodeFunc(MapHandler* maphandler)
 {
   // setup, initialize
   mapmodeThreadRun = true;
@@ -128,6 +136,26 @@ void mapmodeFunc(MapHandler maphandler)
   while (mapmodeThreadRun)
     {
       print_msg("Map mode..");
+      
+      switch (direction)
+	{
+	case Direction::Up:
+	  print_msg("Direction facing up");
+	  break;
+	case Direction::Down:
+	  print_msg("Direction facing down");
+	  break;
+	case Direction::Right:
+	  print_msg("Direction facing right");
+	  break;
+	case Direction::Left:
+	  print_msg("Direction facing left");
+	  break;
+	}
+
+      Point p = maphandler->getPosition();
+      std::cout << "Position : [ " << p.x << " , " << p.y << " ]"<< std::endl;
+      
       // Check distance:
       // if distance greater than 20
       //     Drive forward
@@ -144,12 +172,14 @@ void mapmodeFunc(MapHandler maphandler)
       if (distance > 20)
 	{
 	  // update position
-	  Point pos = maphandler.getPosition();
+	  Point pos = maphandler->getPosition();
+	  std::cout << pos.x << "\t" << pos.y << std::endl;
 	  pos = IncreasePointByDirection(pos, direction);
-	  maphandler.setPosition(pos);
+	  std::cout << pos.x << "\t" << pos.y << std::endl;
+	  maphandler->setPosition(pos);
 	  
 	  // set mapp as free
-	  maphandler.setTile(maphandler.getPosition(), TileType::Free);
+	  maphandler->setTile(maphandler->getPosition(), TileType::Free);
 
 	  // Set state
 	  state = MachineState::Forward;
@@ -158,10 +188,13 @@ void mapmodeFunc(MapHandler maphandler)
       else if(distance < 20 && distance > 3)
 	{
 	  // Set map+1 as block
-	  Point pos = maphandler.getPosition();
+	  Point pos = maphandler->getPosition();
+	  std::cout << pos.x << "\t" << pos.y << std::endl;
 	  pos = IncreasePointByDirection(pos, direction);
+	  std::cout << pos.x << "\t" << pos.y << std::endl;
+
 	  // dont update position to handler
-	  maphandler.setTile(pos, TileType::Block);
+	  maphandler->setTile(pos, TileType::Block);
 	  
 	  // Set state
 	  state = MachineState::TurnRight;
@@ -300,19 +333,19 @@ int main()
 	  // Check for combinations
 	  net.CheckForCombinations();
 
-
-	  print_msg("Checking textpacket queue");
-	  // Parse network textpacket queue
-	  std::cout << "Queue count : " << net.getTextQueueCount() << std::endl;
-
+	  if (debugFlag)
+	    {
+	      print_msg("Checking textpacket queue");
+	      std::cout << "Queue count : " << net.getTextQueueCount() << std::endl;
+	    }
 	  
 	  if (net.getTextQueueCount() > 0)
 	    {
 	      std::list<TextPacket> queue = net.getTextQueue();
 	      for (auto it = queue.begin(); it!=queue.end(); it++)
 		{
-		  std::cout << "Checking ID : " << it->dataId << "\t TAG : " << it->tag << std::endl;
-		  std::cout << "Value : " << it->value << std::endl;
+
+		  std::cout << "Packet value : " << it->value << std::endl;
 		  buffer = it->value;
 		  
 		  auto a = buffer.compare("CLIENT_PING");
@@ -462,7 +495,7 @@ int main()
 		     {
 		       // Map size is 50x50
 		       uint8_t* data = mapHandler.getByteArray();
-		       net.WriteData(data, 2000, MAP_TYPE);
+		       net.WriteData(data, mapHandler.getDataSize(), MAP_TYPE);
 		     }
 		   else if (buffer.compare("CLIENT_PING_READ")==0)
 		     {
@@ -473,7 +506,7 @@ int main()
 		       if (mapmodeThreadRun.load() == false)
 			 {
 			   print_warning("Starting map mode");
-			   std::thread mapmodeThread (mapmodeFunc, std::ref(mapHandler));
+			   std::thread mapmodeThread (mapmodeFunc, &mapHandler);
 			   mapmodeThread.detach();
 			 }
 		     }
@@ -488,7 +521,9 @@ int main()
 		     }
 		}
 	      
-	      print_msg("Clearing text packet queue");
+
+	      if (debugFlag)
+		print_msg("Clearing text packet queue");
 	      
 	      // We processed all element, now clear queue
 	      net.clearTextQueue();
