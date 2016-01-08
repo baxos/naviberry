@@ -413,15 +413,14 @@ int main()
 		   else if (buffer.compare("CLIENT_MOTORS_START")==0)
 		     {
 		       print_msg("Starting both motors..");
-		       exit(-1);
-		       motorA.Start();
-		       motorB.Start();
+		       motorA.StartPWM(0);
+		       motorB.StartPWM(0);
 		     }
 		   else if (buffer.compare("CLIENT_MOTORS_STOP")==0)
 		     {
 		       print_msg("Stopping both motors..");
-		       motorA.Stop();
-		       motorB.Stop();
+		       motorA.StopPWM();
+		       motorB.StopPWM();
 		     }
 		   else if (buffer.compare("CLIENT_MOTORS_FORWARD")==0)
 		     {
