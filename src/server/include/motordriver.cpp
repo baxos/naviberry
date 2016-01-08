@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <thread>
 #include "motordriver.hpp"
 #include "naviberryio.hpp"
 #include "bcmwrapper.hpp"
@@ -18,6 +19,31 @@
 extern "C"
 {
 #include "bcm2835.h"
+}
+
+
+
+void DC_Motor::PWM()
+{
+  while (pwm_on)
+    {
+      GPIO_out(pin_e, HIGH);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      GPIO_out(pin_e, LOW);
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
+
+
+void DC_Motor::StartPWM(int _val)
+{
+  std::thread pwmThread (&DC_Motor::PWM, this);
+  pwm_on = true;
+}
+
+void DC_Motor::StopPWM()
+{
+  pwm_on = false;
 }
 
 // DC_Motor Start void function

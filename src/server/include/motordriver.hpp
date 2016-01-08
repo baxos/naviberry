@@ -8,10 +8,14 @@ class DC_Motor
   uint8_t pin_e;             // pin enable
   uint8_t direction;         // 0 for right 1 for left
   uint8_t running;
- public:
+  bool pwm_on;
+  void PWM();
+public:
   DC_Motor(uint8_t _pin_e, uint8_t _pin_l, uint8_t _pin_r);
   ~DC_Motor();
   void Start();
+  void StartPWM(int _val);
+  void StopPWM();
   void Stop();
   void setDirection(uint8_t _direct);
   uint8_t getDirection();
