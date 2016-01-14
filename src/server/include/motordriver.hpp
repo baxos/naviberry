@@ -8,6 +8,7 @@ class DC_Motor
   uint8_t pin_e;             // pin enable
   uint8_t direction;         // 0 for right 1 for left
   uint8_t running;
+  uint8_t pwm_high_duration;  // for controlling speed of motor, meausred in ms
   bool pwm_on;
   void PWM();
 public:
