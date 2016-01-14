@@ -22,22 +22,95 @@ extern "C"
 }
 
 
-
+// This piece of code shold only be run as a tread
+// hence the constant looping and sleep calls
+// The total time T should be near 20 milli seconds.
+// 2ms / 20 ms  ~~   10%
+// 4ms / 20 ms  ~~   20%
+// 6ms / 20 ms  ~~   30%
+// 86ms / 20 ms  ~~  40%
+// 10ms / 20 ms  ~~  50%
+// 12ms / 20 ms  ~~  60%
+// 14ms / 20 ms  ~~  70%
+// 16ms / 20 ms  ~~  80%
+// 18ms / 20 ms  ~~  90%
+// 20ms / 20 ms  ~~ 100%
 void DC_Motor::PWM()
 {
   while (pwm_on)
     {
       GPIO_out(pin_e, HIGH);
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      std::this_thread::sleep_for(std::chrono::milliseconds(2));
       GPIO_out(pin_e, LOW);
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      std::this_thread::sleep_for(std::chrono::milliseconds(18));
     }
 }
+0
 
-
+// Starts the PMW function on the motor
+// The _val argument should be a number between 1 and 100.
 void DC_Motor::StartPWM(int _val)
 {
+  if (_val < 0)
+  {
+    _val = 0;  
+  }
+  else if (_val > 100)
+  {
+    _val = 100;
+  }
+  
+  auto high_sleep_duration_ms = 0;
+  
+  if ((_val >= 0) && (_val < 10))
+  {
+    high_sleep_duration_ms = 2;
+  }
+  else if ((_val >= 10) && (_val < 20))
+  {
+    high_sleep_duration_ms = 4;
+  }
+  else if ((_val >= 20) && (_val < 30))
+  {
+    high_sleep_duration_ms = 6;
+  }
+  else if ((_val >= 30) && (_val < 40))
+  {
+    high_sleep_duration_ms = 8;
+  }
+  else if ((_val >= 40) && (_val < 50))
+  {
+    high_sleep_duration_ms = 10;
+  }
+  else if ((_val >= 50) && (_val < 60))
+  {
+    high_sleep_duration_ms = 12;
+  }
+  else if ((_val >= 60) && (_val < 70))
+  {
+    high_sleep_duration_ms = 14;
+  }
+  else if ((_val >= 70) && (_val < 80))
+  {
+    high_sleep_duration_ms = 16;
+  }
+  else if ((_val >= 80) && (_val < 90))
+  {
+    high_sleep_duration_ms = 18;
+  }
+  else if ((_val >= 90) && (_val <= 100))
+  {
+    high_sleep_duration_ms = 20;
+  }
+  else if ((_val >= 10) && (_val < 20))
+  {
+    high_sleep_duration_ms = 20;
+  }
+  
+  
+  // start pwm loop in seperated thread
   std::thread pwmThread (&DC_Motor::PWM, this);
+  // set the thread variable
   pwm_on = true;
 }
 
