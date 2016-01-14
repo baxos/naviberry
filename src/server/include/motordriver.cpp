@@ -24,7 +24,7 @@ extern "C"
 
 // This piece of code shold only be run as a tread
 // hence the constant looping and sleep calls
-// The total time T should be near 20 milli seconds.
+// The total time T should be near 20 milli seconds. ~ 50 Hz
 // 2ms / 20 ms  ~~   10%
 // 4ms / 20 ms  ~~   20%
 // 6ms / 20 ms  ~~   30%
@@ -37,12 +37,15 @@ extern "C"
 // 20ms / 20 ms  ~~ 100%
 void DC_Motor::PWM()
 {
+  auto pwm_low_duration = 20 - pwm_high_duration;
+  
+  
   while (pwm_on)
     {
       GPIO_out(pin_e, HIGH);
-      std::this_thread::sleep_for(std::chrono::milliseconds(2));
+      std::this_thread::sleep_for(std::chrono::milliseconds(pwm_high_duration));
       GPIO_out(pin_e, LOW);
-      std::this_thread::sleep_for(std::chrono::milliseconds(18));
+      std::this_thread::sleep_for(std::chrono::milliseconds(pwm_low_duration));
     }
 }
 0
@@ -107,6 +110,9 @@ void DC_Motor::StartPWM(int _val)
     high_sleep_duration_ms = 20;
   }
   
+  
+  // set to thread variable
+  pwm_high_duration = high_slee_duration;
   
   // start pwm loop in seperated thread
   std::thread pwmThread (&DC_Motor::PWM, this);
