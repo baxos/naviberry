@@ -6,6 +6,17 @@
 
 
 // Sets the specific point to the given type
+/**
+  * @name setTile
+  * @brief Sets a tile to new value
+  * @param _pt Coordinate to the tile
+  * @param _type The tile type.
+  * @retval None
+  *
+  *
+  * This function simply sets a tile specified by a coordinate
+  * to a new TileType
+  **/
 void MapHandler::setTile(Point _pt, TileType _type)
 {
   if (Map.count(_pt))
@@ -20,6 +31,15 @@ void MapHandler::setTile(Point _pt, TileType _type)
 }
 
 // Sets the current position of the robot on the map
+/**  
+  * @name setPosition
+  * @brief Set the position of the robot on the map.
+  * @param _newpt The new coordinate of the robot.
+  * @retval None
+  * 
+  * 
+  * Sets the new coordinate of the robot to the map class.
+ **/
 void MapHandler::setPosition(Point _newpt)
 {
   std::cout << "X" << _newpt.x << "\t Y" << _newpt.y << std::endl;
@@ -31,6 +51,16 @@ void MapHandler::setPosition(Point _newpt)
 // Class initializer
 // set local scope variables
 // initialize data
+/**
+ * @name MapHandler
+ * @brief Constructs Maphandler
+ * @param _size The size of the current map
+ * @retval None
+ *
+ *
+ * Constructs and initializes the MapHandler class.
+ * It will iterate through all the coordinates and set the tiles to "unknown" 
+ **/
 MapHandler::MapHandler(int _size)
 {
   // Initialize the class
@@ -64,6 +94,15 @@ MapHandler::MapHandler(int _size)
 }
 
 // Returns the given tilen bound to the point
+/**
+  * @name getTile
+  * @brief Returns the TileType of the coordinate.
+  * @param _pt The target tile coordinate
+  * @retval Returns a TileType value
+  *
+  *
+  * Returns a value of TileType fetched from a specific coordinate.
+ **/
 TileType MapHandler::getTile(Point _pt)
 {
   // If map contains the point return the value of tiletype
@@ -86,6 +125,19 @@ TileType MapHandler::getTile(Point _pt)
 // Convert each datatype to raw bytes
 // and create a sequential array of the bytes
 // ready to send..
+/**
+  * @name getByteArray
+  * @brief Returns a pointer to a byte array of the map
+  * @retval uint8_t* pointing to a byte array
+  *
+  *
+  * The function constructs a bytearray depeinding on the size of the array. 
+  * The array will contain some few information bytes in the top.
+  * uint8_t mapsize
+  * uint8_t pos_x
+  * uint8_t pos_y
+  * uint8_t[mapsize*mapsize] data
+ **/
 uint8_t* MapHandler::getByteArray()
 {
   auto offset = 0;

@@ -1,3 +1,13 @@
+/**
+  * @name server.cpp
+  * @author Jan Emil Bacher
+  * @date 2015-2016
+  * @brief The main file.
+  * 
+  * @mainpage Naviberry Documentation
+  *
+  */
+
 /* 
    Author      : Jan Emil Bacher
    Name        : server.cpp
@@ -51,7 +61,8 @@ void rob_sleep(int x)
 
 
 void signal_callback_handle(int _signalnum)
-{
+{  
+
   if ( _signalnum == 2)
     {
       print_error("Interrupt signal recieved, CTRL-C pressed, closing down..");
@@ -274,10 +285,14 @@ int main()
   signal(SIGINT, signal_callback_handle);
 
 
+
   // Initialize hardware
   DC_Motor motorA(PIN11, PIN13, PIN15);
   DC_Motor motorB(PIN19, PIN21, PIN23);
   SonicSensor soundSensor(PIN16, PIN18);
+
+
+
 
   // Initialize networking
   Network net("localhost", 1000);
@@ -290,7 +305,8 @@ int main()
   // Scheduler
   Scheduler sched;
   MapHandler mapHandler(50);
-
+  
+  
 
 
   // New method to create server connection

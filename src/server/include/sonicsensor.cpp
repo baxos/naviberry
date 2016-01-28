@@ -14,6 +14,18 @@
 
 extern bool debugFlag;
 
+/**
+  * @name SonicSensor
+  * @brief Constructs the SonicSensor class
+  * @param _trig The trigger pin
+  * @param _echo The echo pin
+  * @retval None
+  *
+  *
+  * Constructs and initializes the SonicSensor class. 
+  * When done, it sets the ready flag.
+  *
+  **/
 SonicSensor::SonicSensor(uint8_t _trig, uint8_t _echo)
 {
   // Set class pins
@@ -31,11 +43,28 @@ SonicSensor::SonicSensor(uint8_t _trig, uint8_t _echo)
   ready = true;
 }
 
+/**
+ * @name microS_delay
+ * @brief Sleep for X micro second(s).
+ * @param x Value in micro second
+ * @retval None
+ *
+ *
+ * Just small function for sleep X micro second.
+ **/
 void SonicSensor::microS_delay(int x)
 {
   std::this_thread::sleep_for(std::chrono::microseconds(x));
 }
 
+/**
+ * @name Pulse
+ * @brief Sends a short pulse on the trigger pin.
+ * @retval None
+ *
+ *
+ * Sends out a short pulse ~ 20 micro second. 
+ **/
 void SonicSensor::Pulse()
 {
   // Make sure trigger is low
@@ -49,6 +78,20 @@ void SonicSensor::Pulse()
   GPIO_out(PIN_TRIG, LOW);
 }
 
+/**
+ * @name ReadDistance
+ * @brief Returns [cm] reading of the distance
+ * @retval int Returns the value in [cm].
+ * @retval Returns -1 on error
+ *
+ * This function will automaticially call several triggers and reads.
+ * Sample nd filter the result and return it.
+ *
+ * It will 
+ * Pulse, Read, Check for error, Store, Repeat
+ *
+ * const auto reads times
+ **/
 int SonicSensor::ReadDistance()
 {
   auto bad_reads = 0;
@@ -80,7 +123,7 @@ int SonicSensor::ReadDistance()
 	  // Read
 	  echo_in = GPIO_read(PIN_ECHO);
 	}
-      
+      // Get time
       auto elapsed_echo = std::chrono::high_resolution_clock::now() - start_echo;
       // auto tdiff = elapsed_echo - start_echo;
       
@@ -106,21 +149,27 @@ int SonicSensor::ReadDistance()
 	  if (debugFlag)
 	    {
 	      // std::cout << "TIME READ : " << time_used << " microSeconds \t distance : " << distance << " cm" << std::endl;
+	    
 	    }
-	  bad_read = false;
-
+	  
 	  average += (int) distance;
-
+	  
 	}
+      // First iteration is done,
+      // make small pause
+      microS_delay(100);
+      
     }
 
+  // If more than half of the reads are bad_reads, consider the whole reading as bad
+  // return -1;
   if ((bad_reads > (reads/2)))
     {
       return -1;
     }
   else
     {
-      return average / (reads-bad_reads);
+      return (average / (reads-bad_reads));
     }
 
 }

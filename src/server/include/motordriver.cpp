@@ -1,3 +1,15 @@
+/**
+  * @file motordriver.cpp
+  * @Author Jan Emil Bacher
+  * @date 2015-2016
+  * @brief This file is used for directly controlling a dc motor
+  *
+  *
+  * This class is used for controlling a dc motor. It is designed for a H-bridge design with a enable, and 2 logic pins.
+  * It both uses PMW and full on/off control.
+  */
+  
+
 /*##################################################################
   # motordriver.cpp                                                #
   #                                                                #
@@ -22,19 +34,24 @@ extern "C"
 }
 
 
-// This piece of code shold only be run as a tread
-// hence the constant looping and sleep calls
-// The total time T should be near 20 milli seconds. ~ 50 Hz
-// 2ms / 20 ms  ~~   10%
-// 4ms / 20 ms  ~~   20%
-// 6ms / 20 ms  ~~   30%
-// 86ms / 20 ms  ~~  40%
-// 10ms / 20 ms  ~~  50%
-// 12ms / 20 ms  ~~  60%
-// 14ms / 20 ms  ~~  70%
-// 16ms / 20 ms  ~~  80%
-// 18ms / 20 ms  ~~  90%
-// 20ms / 20 ms  ~~ 100%
+/**
+  * @name PWM
+  * @brief Internal function to flicker a port for creating a pmw signal.
+  * 
+  * This piece of code shold only be run as a tread
+  * hence the constant looping and sleep calls
+  * The total time T should be near 20 milli seconds. ~ 50 Hz
+  * 2ms / 20 ms  ~~   10%
+  * 4ms / 20 ms  ~~   20%
+  * 6ms / 20 ms  ~~   30%
+  * 86ms / 20 ms  ~~  40%
+  * 10ms / 20 ms  ~~  50%
+  * 12ms / 20 ms  ~~  60%
+  * 14ms / 20 ms  ~~  70%
+  * 16ms / 20 ms  ~~  80%
+  * 18ms / 20 ms  ~~  90%
+  * 20ms / 20 ms  ~~ 100%
+  */
 void DC_Motor::PWM()
 {
   auto pwm_low_duration = 20 - pwm_high_duration;
@@ -48,10 +65,16 @@ void DC_Motor::PWM()
       std::this_thread::sleep_for(std::chrono::milliseconds(pwm_low_duration));
     }
 }
-0
 
-// Starts the PMW function on the motor
-// The _val argument should be a number between 1 and 100.
+
+/**
+  * @name StartPWM
+  * @brief Public function used for starting the PWM.
+  * @param [in] _val [0..100]% of signal
+  *
+  * Starts the PWM function on the motor.
+  * The _val parameter should be a number between 1 and 100.
+  */
 void DC_Motor::StartPWM(int _val)
 {
   if (_val < 0)
@@ -112,7 +135,7 @@ void DC_Motor::StartPWM(int _val)
   
   
   // set to thread variable
-  pwm_high_duration = high_slee_duration;
+  pwm_high_duration = high_sleep_duration_ms;
   
   // start pwm loop in seperated thread
   std::thread pwmThread (&DC_Motor::PWM, this);
@@ -120,41 +143,71 @@ void DC_Motor::StartPWM(int _val)
   pwm_on = true;
 }
 
+/**
+  * @name StopPWM
+  * @brief Stops the motors pwm.
+  * @retval None
+  */
 void DC_Motor::StopPWM()
 {
   pwm_on = false;
 }
 
-// DC_Motor Start void function
-// Starts the motor, by setting PIN_E to high
+/** @name Start
+  * @brief Starts the motor(without PWM).
+  * @retval None
+  *
+  * Starts the motor, this function will not start the motor with PWM.
+  */
 void DC_Motor::Start()
 {
   running = 1;
   print_msg("Motor starting");
+  // Set enable to high
   GPIO_out(pin_e, HIGH);
 }
 
-// DC_Motor Stop void function
-// Stops the motor, by setting PIN_E to low
+/**
+  * @name Stop
+  * @brief Stops the motor.
+  * @retval None
+  *
+  * Stops the motor, this function won't stop the motor if PWM is enabled.
+  */
 void DC_Motor::Stop()
 {
   running = 0;
   print_msg("Motor stopping");
   GPIO_out(pin_e, LOW);
 }
-// DC_Motor getDirection integer function
-// Takes no inputs
+
+
 // Return 0 for clockwise, 1 for counter-clockwise
+/**
+  * @name getDirection
+  * @brief Gets the current direction of the motor.
+  * @retval 0 for clockwise direction .
+  * @retval 1 for counter-clockwise direction.
+  * Get for pulling the direction value of the motor class.
+  * Returns 0 for clokwise direction.
+  * Returns 1 for counter-clockwise direction.
+  */
 uint8_t DC_Motor::getDirection()
 {
   return direction;
 }
 
 
-// DC_Motor setDirection void function
-// Takes input as direction
-// 0 is clockwise
-// 1 is counter-clockwise
+/** 
+  * @name setDirection
+  * @brief Sets the direction of the motor.
+  * @param [in] _direct the direction of the motor.
+  * @retval None
+  *
+  * Sets the direction of the motor.
+  * 0 is for clockwise.
+  * 1 for counter-clockwise.
+  */
 void DC_Motor::setDirection(uint8_t _direct)
 {
   // Save current motor state
@@ -202,9 +255,16 @@ void DC_Motor::setDirection(uint8_t _direct)
     }
 }
 
-// DC_Motor DC_Motor De-constructor function
-// When class is about to be cleaned, this function is called
-// So we clean, set all pins used to low
+/**
+  * @name Deconstructor
+  * @brief Deconstructs the class, set all outport ports to LOW.
+  * @param void
+  * @retval None
+  *
+  *
+  * Deconstructs the class by setting all the outports to low.
+  * In this particular class there is no dynamic memory used.
+  */
 DC_Motor::~DC_Motor(void)
 {
   print_msg("De-constructor called on DC_Motor");
@@ -214,11 +274,20 @@ DC_Motor::~DC_Motor(void)
   GPIO_out(pin_e, LOW);
 }
 
-// DC_Motor DC_Motor constructor function
-// Takes 3 integer inputs
-// pin_e = Enable PIN
-// pin_r = Logic pin1
-// pin_l = Logic pin2
+
+/**
+  * @name Constructor
+  * @brief Constructs the class and initializes the local data and the GPIO pins.
+  * @param _pin_e Enable pin.
+  * @param _pin_l Logic pin 1.
+  * @param _pin_r Logic pin 2.
+  * @retval None
+  *
+  *
+  * Constructor of the class. This will set local variables and initialize the pins.
+  * It takes 3 arguments as input each one assigned to a pin.
+  * The motor will always start shut off.
+  */
 DC_Motor::DC_Motor(uint8_t _pin_e, uint8_t _pin_l, uint8_t _pin_r)
 {
   print_msg("Motor initialization");
