@@ -37,6 +37,8 @@ public:
   void StartPWM(int _val); ///< Start PMW on the motor
   void StopPWM(); ///< Stops the PWM on motor
   void Stop(); ///< Stops the motor
+  void IncreaseSpeed(); ///< Increases the speed of the motor.
+  void DecreaseSpeed(); ///< Decrease the speed of the motor.
   void setDirection(uint8_t _direct); ///< Sets the direction of the motor
   uint8_t getDirection();       ///< Gets the direction of the motor
 
