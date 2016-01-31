@@ -66,6 +66,15 @@ void DC_Motor::PWM()
     }
 }
 
+void DC_Motor::IncreaseSpeed()
+{
+   auto _val = 
+ 
+   auto high_sleep_duration_ms = pmw_high_duration + 2;
+  
+  // set to thread variable
+  pwm_high_duration = high_sleep_duration_ms;
+}
 
 /**
   * @name StartPWM
