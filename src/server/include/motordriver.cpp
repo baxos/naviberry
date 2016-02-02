@@ -66,15 +66,53 @@ void DC_Motor::PWM()
     }
 }
 
+
+
+/**
+  * @name IncreaseSpeed
+  * @brief Increases the PWM speed
+  * @retval None
+  *
+  * 
+  * Increases the speed of the motor, by increasing the pmw_high_duration variable.
+  * By increasing the variable the pwm loop will remain high for a longer period of time.
+  **/
 void DC_Motor::IncreaseSpeed()
 {
-   auto _val = 
- 
-   auto high_sleep_duration_ms = pmw_high_duration + 2;
-  
+   auto high_sleep_duration_ms = pwm_high_duration + 2;
+   if (high_sleep_duration_ms > 20)
+     {
+       high_sleep_duration_ms = 20;
+     }
+
   // set to thread variable
   pwm_high_duration = high_sleep_duration_ms;
 }
+
+
+
+/**
+  * @name DecreaseSpeed
+  * @brief Decreases the PWM speed
+  * @retval None
+  *
+  *
+  * Decreases the speed of the motor, by decreasing the pwm_hugh_duration variable.
+  * By decreasing the variable the pwm loop will remain high for a shorter period of time.
+  **/
+void DC_Motor::DecreaseSpeed()
+{
+  auto high_sleep_duration_ms = pwm_high_duration - 2;
+  if (high_sleep_duration_ms < 0)
+    {
+      high_sleep_duration_ms = 0;
+    }
+
+  // set to thread variable
+  pwm_high_duration = high_sleep_duration_ms;
+}
+
+
 
 /**
   * @name StartPWM

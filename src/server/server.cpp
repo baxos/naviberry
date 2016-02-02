@@ -39,6 +39,8 @@ extern "C"
 #include "./include/sonicsensor.hpp"
 #include "./include/scheduler.hpp"
 #include "./include/mapping.hpp"
+#include "./include/motorcontroller.hpp"
+
 
 
 static std::string current_distance_reading_string = "";
@@ -291,6 +293,7 @@ int main()
   DC_Motor motorB(PIN19, PIN21, PIN23);
   SonicSensor soundSensor(PIN16, PIN18);
 
+  MotorController controller(&motorA, &motorB);
 
 
 
@@ -394,49 +397,18 @@ int main()
 			  // Repeat
 			}
 		    }
-		  // ============================= MOTOR A ====================================
-		   else if(buffer.compare("CLIENT_MOTORA_START")==0)
-		     {
-		       // Start motor
-		       print_msg("STARTING MOTOR A");
-		       motorA.Start();
-		     }
-		   else if(buffer.compare("CLIENT_MOTORA_STOP")==0)
-		     {
-		       // Stop motor
-		       motorA.Stop();
-		     }
-		   else if(buffer.compare("CLIENT_MOTORA_FORWARD")==0)
-		     {
-		       motorA.setDirection(0);
-		     }
-		   else if (buffer.compare("CLIENT_MOTORA_BACKWARD")==0)
-		     {
-		       motorA.setDirection(1);
-		     }
-		  // ============================ MOTOR B ===============================================
-		   else if (buffer.compare("CLIENT_MOTORB_START")==0)
-		     {
-		       print_msg("Motor B starting");
-		       motorB.Start();
-		     }
-		   else if (buffer.compare("CLIENT_MOTORB_STOP")==0)
-		     {
-		       print_msg("Motor B stopping");
-		       motorB.Stop();
-		     }
-		  // ============================== Both motors ======================================
+ // ============================== Both motors ======================================
 		   else if (buffer.compare("CLIENT_MOTORS_START")==0)
 		     {
 		       print_msg("Starting both motors..");
-		       motorA.StartPWM(20);
-		       motorB.StartPWM(20);
+		       controller.Start();
 		     }
 		   else if (buffer.compare("CLIENT_MOTORS_STOP!")==0)
 		     {
 		       print_msg("Stopping both motors..");
-		       motorA.StopPWM();
-		       motorB.StopPWM();
+		       controller.Stop();
+		       //		       motorA.StopPWM();
+		       //                      motorB.StopPWM();
 		     }
 		   else if (buffer.compare("CLIENT_MOTORS_FORWARD")==0)
 		     {
@@ -450,61 +422,12 @@ int main()
 		     }
 		   else if (buffer.compare("CLIENT_MOTORS_TURNLEFT")==0)
 		     {
-		       const auto sleep_time = 95;
-		       auto repeats = 3;
-		       
-		       print_msg("Turning left");
-		       // Save state of motors
-		       auto mota_dir = motorA.getDirection();
-		       auto motb_dir = motorB.getDirection();
-		       // Change direcions of motors
-		       motorA.setDirection(1);
-		       motorB.setDirection(0);
-		       
-		       while (repeats > 0)
-			 {
-			   // Fire them up!
-			   motorA.Start();
-			   motorB.Start();
-			   // Wait x time, then halt them!
-			   rob_sleep(sleep_time);
-			   motorA.Stop();
-			   motorB.Stop();
-			   rob_sleep(sleep_time);
-			   repeats--;
-			 }
-		       
-		       // Set motor state back to origin
-		       motorA.setDirection(mota_dir);
-		       motorB.setDirection(motb_dir);
+		       // 
 		     }
 		   else if (buffer.compare("CLIENT_MOTORS_TURNRIGHT")==0)
 		     {
-		       const auto sleep_time = 95;
-		       auto repeats = 3;
-		       print_msg("Turning right");
-		       // Save state of motors
-		       auto mota_dir = motorA.getDirection();
-		       auto motb_dir = motorB.getDirection();
-		       // Change directions
-		       motorA.setDirection(0);
-		       motorB.setDirection(1);
-		       // Fire them up
-		       while ( repeats > 0)
-			 {
-			   motorA.Start();
-			   motorB.Start();
-			   // Wait x ms and halt
-			   rob_sleep(sleep_time);
-			   motorA.Stop();
-			   motorB.Stop();
-			   rob_sleep(sleep_time);
-			   repeats--;
-			 }
-		       
-		       // Set motor stae back to origin
-		       motorA.setDirection(mota_dir);
-		       motorB.setDirection(motb_dir);
+		       // 
+		       controller.TurnRight();
 		     }
 		   else if (buffer.compare("CLIENT_DOWNLOAD_MAP")==0)
 		     {
