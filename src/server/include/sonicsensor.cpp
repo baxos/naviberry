@@ -43,6 +43,75 @@ SonicSensor::SonicSensor(uint8_t _trig, uint8_t _echo)
   ready = true;
 }
 
+
+/**
+  * @name AutoLoop
+  * @brief Loop the sensor readings
+  * @retval None
+  *
+  *
+  * Spawns a thread which will continue to loop the sensor readings.
+  * The loop can be stopped by call AutoLoopStop .
+  * Reading is stored inside class and can be fetched from the outside by call
+  * getReading() .
+  **/
+void SonicSensor::AutoLoop()
+{
+  std::thread sensorThread (&SonicSensor::threadFuncLoop, this);
+  
+  sensorThread.detach();
+}
+
+
+/**
+  * @name AutoLoopStop
+  * @brief Stops the loop of the sensor readings.
+  * @retval None
+  *
+  *
+  * Stops the thread which runs the reading loop of the sensor.
+  **/
+void SonicSensor::AutoLoopStop()
+{
+  threadRunning = false;
+}
+
+/**
+  * @name threadFuncLoop
+  * @brief Internal function used by thread
+  * @retval None
+  *
+  *
+  * This function is called by a thread spawned in AutoLoop . The function will continue to 
+  * fetch the sensor readings.
+  *
+  **/
+void SonicSensor::threadFuncLoop()
+{
+  const auto freq = 500;
+  
+  // Make sure threadRunning is setted
+  threadRunning = true;
+
+  while (threadRunning)
+    {
+      auto dist = this->ReadDistance();
+      if (dist == -1)
+	{
+	  // Error reading
+	}
+      else
+	{
+	  // Success
+	}
+
+      lastReading = dist;
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(freq));
+    }
+}
+
+
 /**
  * @name microS_delay
  * @brief Sleep for X micro second(s).
