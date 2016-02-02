@@ -429,8 +429,8 @@ int main()
 		   else if (buffer.compare("CLIENT_MOTORS_START")==0)
 		     {
 		       print_msg("Starting both motors..");
-		       motorA.StartPWM(30);
-		       motorB.StartPWM(30);
+		       motorA.StartPWM(20);
+		       motorB.StartPWM(20);
 		     }
 		   else if (buffer.compare("CLIENT_MOTORS_STOP!")==0)
 		     {

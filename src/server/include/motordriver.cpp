@@ -139,6 +139,7 @@ void DC_Motor::StartPWM(int _val)
   
   // start pwm loop in seperated thread
   std::thread pwmThread (&DC_Motor::PWM, this);
+  pwmThread.detach();
   // set the thread variable
   pwm_on = true;
 }
