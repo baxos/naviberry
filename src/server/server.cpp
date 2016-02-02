@@ -22,7 +22,6 @@
 #include <string>
 #include <list>
 #include <cstring>
-#include <thread>
 #include <atomic>
 extern "C"
 {
@@ -43,23 +42,10 @@ extern "C"
 
 
 
-static std::string current_distance_reading_string = "";
-int32_t current_distance = -1;
-
 extern bool debugFlag;
 
 // Atomic booleans for keeping the threads running, or closing them.
-std::atomic_bool sensorThreadRun;
 std::atomic_bool mapmodeThreadRun;
-
-// change please!!!!!!!!!!!!!
-void rob_sleep(int x)
-{
-  if (debugFlag)
-    print_msg("Sleep called");
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(x));
-}
 
 
 void signal_callback_handle(int _signalnum)
@@ -115,7 +101,7 @@ void mapmodeFunc(MapHandler* maphandler)
       //     goto Check distance
 
       // Do the logic for setting the current state
-      auto distance = current_distance;
+      auto distance = 15 ; //current_distance;
       state = MachineState::Standby;
 
       if (distance > 20)
@@ -174,37 +160,10 @@ void mapmodeFunc(MapHandler* maphandler)
 	}
 
 
-      rob_sleep(freq);
+      //      rob_sleep(freq);
    }
 }
 
-void senFunc(SonicSensor& _sensor)
-{
-  print_msg("sensor thread started");
-  const uint16_t freq = 500; //  ms update frequency
-  sensorThreadRun = true;
-  while (sensorThreadRun)
-    {
-      auto dist = _sensor.ReadDistance();
-      if (dist == -1)
-	{
-	  // Error reading
-	}
-      else
-	{
-	  // Sucess reading
-	}
-
-      // Set to tring
-      current_distance = dist;
-      current_distance_reading_string = std::to_string(dist);
-
-      // sleep
-      rob_sleep(freq);
-    }
-
-  print_warning("Sensor thread stopped");
-}
 
 
 
@@ -237,10 +196,9 @@ int main()
   Network net("localhost", 1000);
 
   // Initialize atomic variables
-  sensorThreadRun = false;
   mapmodeThreadRun = false;
 
-
+  
   // Scheduler
   Scheduler sched;
   MapHandler mapHandler(50);
@@ -263,12 +221,6 @@ int main()
   auto prog_running = true;
   // Make a string buffer, because all comm is as strings
   std::string buffer;
-  std::string dist_reading = "-1";
-  auto dist_lastRead = 0 ;
-
-  // The main threads
-  std::thread senThread (senFunc, std::ref(soundSensor));
-
 
   while (prog_running)
     {
@@ -314,11 +266,11 @@ int main()
 		    }	  
 		  else if (buffer.compare("CLIENT_READ_SENSORS")==0)
 		    {
-		      std::cout << "Last distance measurement : " << current_distance_reading_string << std::endl;	      
+		      auto current_distance = soundSensor.getReading();
 		      uint8_t* rawBytes = new uint8_t[sizeof(current_distance)];
 		      std::memset(&rawBytes[0], 0, sizeof(current_distance));
 		      std::memcpy(&rawBytes[0], &current_distance, sizeof(current_distance));
-		      net.WriteData(rawBytes, sizeof(dist_lastRead), SENSOR_TYPE);
+		      net.WriteData(rawBytes, sizeof(current_distance), SENSOR_TYPE);
 		      delete rawBytes;
 		    }
 		   else if (buffer.compare("CLIENT_TEST_SENSOR")==0)
@@ -412,9 +364,6 @@ int main()
 
 
   // Exit threads
-  sensorThreadRun = false;
-  senThread.join();
-
   mapmodeThreadRun = false;
 
 

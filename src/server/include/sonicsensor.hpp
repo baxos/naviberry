@@ -22,4 +22,5 @@ public:
   void AutoLoop();
   void AutoLoopStop();
   int ReadDistance();
+  int getReading() { return lastReading; } ;
 };
