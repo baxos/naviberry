@@ -3,24 +3,16 @@
 
 #include <map>
 #include <cstdint>
-
-struct Point
-{
-  int32_t x;
-  int32_t y;
-};
-
-struct uint8Point
-{
-  uint8_t x;
-  uint8_t y;
-};
-
-static bool operator< (Point a, Point b) { return std::make_pair(a.x, a.y) < std::make_pair(b.x,b.y) ; }
+#include "./point.hpp"
 
 enum class TileType { Unknown, Free, Block, None };
 enum class MachineState { Standby, Forward, Backward, TurnRight, TurnLeft, ReadSensor };
 enum class Direction { Up=0, Right=1, Down=2, Left=3 };
+
+Direction UpdateDirectionByTurn(Direction _currentDirection, Direction _turn);
+Point IncreasePointByDirection(Point _pt, Direction _dir);
+
+static bool operator< (Point a, Point b) { return std::make_pair(a.x, a.y) < std::make_pair(b.x, b.y);}
 
 class MapHandler
 {
