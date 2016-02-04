@@ -222,6 +222,10 @@ int main()
   // Make a string buffer, because all comm is as strings
   std::string buffer;
 
+
+  // start up sensor
+  soundSensor.AutoLoop();
+
   while (prog_running)
     {
       sched.Update();
@@ -295,8 +299,6 @@ int main()
 		     {
 		       print_msg("Stopping both motors..");
 		       controller.Stop();
-		       //		       motorA.StopPWM();
-		       //                      motorB.StopPWM();
 		     }
 		   else if (buffer.compare("CLIENT_MOTORS_FORWARD")==0)
 		     {
@@ -310,11 +312,10 @@ int main()
 		     }
 		   else if (buffer.compare("CLIENT_MOTORS_TURNLEFT")==0)
 		     {
-		       // 
+		       controller.TurnLeft();
 		     }
 		   else if (buffer.compare("CLIENT_MOTORS_TURNRIGHT")==0)
 		     {
-		       // 
 		       controller.TurnRight();
 		     }
 		   else if (buffer.compare("CLIENT_DOWNLOAD_MAP")==0)
@@ -346,11 +347,7 @@ int main()
 		       print_warning(buffer);    
 		     }
 		}
-	      
-
-	      if (debugFlag)
-		print_msg("Clearing text packet queue");
-	      
+	      	      
 	      // We processed all element, now clear queue
 	      net.clearTextQueue();
 	      

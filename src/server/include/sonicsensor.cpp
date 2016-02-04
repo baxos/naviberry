@@ -45,6 +45,27 @@ SonicSensor::SonicSensor(uint8_t _trig, uint8_t _echo)
 
 
 /**
+  * @name ~sonicSensor
+  * @brief Deconstructs the class
+  * @retval None
+  *
+  *
+  * Cleans up the class. Set all outputs to low. 
+  * Stop thread if it is running.
+  **/
+SonicSensor::~SonicSensor()
+{
+  // set all outputs to low
+  GPIO_out(PIN_TRIG, LOW);
+
+  // if thread is running, ask it to stop
+  if (threadRunning)
+    {
+      threadRunning = false;
+    }
+}
+
+/**
   * @name AutoLoop
   * @brief Loop the sensor readings
   * @retval None

@@ -18,6 +18,7 @@ private:
   void threadFuncLoop();
 public:
   SonicSensor(uint8_t _trig, uint8_t _echo);
+  ~SonicSensor();
   void Pulse();
   void AutoLoop();
   void AutoLoopStop();
