@@ -11,6 +11,10 @@
 #include <map>
 #include <cstdint>
 #include "./point.hpp"
+#include "./motordriver.hpp"
+#include "./motorcontroller.hpp"
+#include "./sonicsensor.hpp"
+
 
 enum class TileType { Unknown, Free, Block, None };
 enum class MachineState { Standby, Forward, Backward, TurnRight, TurnLeft, ReadSensor };
@@ -36,8 +40,11 @@ private:
   std::map<Point, TileType> Map;
   int32_t MapSize;
   Point CurrentPosition;
-
+  void mapmodeFunc(MotorController* _controller, SonicSensor* _sensor);
+  bool mapmodeThreadRun;
 public:
+  void MapModeStart(MotorController* _controller, SonicSensor* _sensor);
+  void MapModeStop();
   void setTile(Point _pt, TileType _type);
   void setPosition(Point _newpt);
   MapHandler(int32_t _size);

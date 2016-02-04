@@ -1,3 +1,6 @@
+#ifndef SONICSENSOR__HPP
+#define SONICSENSOR__HPP
+
 /**
   * @file sonicsensor.hpp
   * @author Jan Emil Bacher
@@ -40,3 +43,6 @@ public:
   int ReadDistance();
   int32_t getReading();
 };
+
+
+#endif

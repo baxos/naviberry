@@ -1,3 +1,5 @@
+#ifndef MOTORDRIVER__HPP
+#define MOTORDRIVER__HPP
 /**
   * @file motordriver.hpp
   * @author Jan Emil Bacher
@@ -44,3 +46,5 @@ public:
 
 };
 
+
+#endif

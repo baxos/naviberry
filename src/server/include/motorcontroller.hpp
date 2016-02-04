@@ -1,3 +1,6 @@
+#ifndef MOTORCONTROLLER__HPP
+#define MOTORCONTROLLER__HPP
+
 /**
   * @file motorcontroller.hpp
   * @author Jan Emil Bacher
@@ -40,3 +43,6 @@ public:
   void DriveDistance(int16_t _dist);
 };
 
+
+
+#endif

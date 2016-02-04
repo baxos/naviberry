@@ -1,5 +1,6 @@
 #include <map>
 #include <iostream>
+#include <thread>
 #include "./mapping.hpp"
 #include "./naviberryio.hpp"
 
@@ -91,6 +92,140 @@ void MapHandler::setTile(Point _pt, TileType _type)
       Map.insert(std::make_pair(_pt, _type));
     }
 }
+
+/**
+ * @name MapeModeStart
+ * @brief Sets the robot mode to MapMode
+ * @param MotorController* _controller : The steering module
+ * @param SonicSensor* _sensor : The distance reader module
+ **/
+void MapHandler::MapModeStart(MotorController* _controller, SonicSensor* _sensor)
+{
+  // Spawn thread with mapmodeFunc
+
+  std::thread mapmodeThread (&MapHandler::mapmodeFunc, this, _controller, _sensor);
+}
+
+/**
+ * @name MapModeStop
+ * @brief Stops the robot MapMode
+ **/
+void MapHandler::MapModeStop()
+{
+  mapmodeThreadRun = false;
+}
+
+/**
+ * @name mapmodeFunc
+ * @brief Internal function used for threading
+ **/
+void MapHandler::mapmodeFunc(MotorController* _controller, SonicSensor* _sensor)
+{
+  // setup, initialize
+  mapmodeThreadRun = true;
+  const uint16_t freq = 5000;
+  MachineState state = MachineState::Standby;
+  Direction direction = Direction::Up;
+
+  print_msg("Map mode thread, started and running");
+
+
+  while (mapmodeThreadRun)
+    {
+      print_msg("Map mode..");
+      
+      switch (direction)
+	{
+	case Direction::Up:
+	  print_msg("Direction facing up");
+	  break;
+	case Direction::Down:
+	  print_msg("Direction facing down");
+	  break;
+	case Direction::Right:
+	  print_msg("Direction facing right");
+	  break;
+	case Direction::Left:
+	  print_msg("Direction facing left");
+	  break;
+	}
+
+      Point p = this->getPosition();
+      std::cout << "Position : [ " << p.x << " , " << p.y << " ]"<< std::endl;
+      
+      // Check distance:
+      // if distance greater than 20
+      //     Drive forward
+      //     goto Check distance
+      // else
+      //     update map
+      //     turn left OR turn right
+      //     goto Check distance
+
+      // Do the logic for setting the current state
+      auto distance = 15 ; //current_distance;
+      state = MachineState::Standby;
+
+      if (distance > 20)
+	{
+	  // update position
+	  Point pos = this->getPosition();
+	  std::cout << pos.x << "\t" << pos.y << std::endl;
+	  pos = IncreasePointByDirection(pos, direction);
+	  std::cout << pos.x << "\t" << pos.y << std::endl;
+	  this->setPosition(pos);
+	  
+	  // set mapp as free
+	  this->setTile(this->getPosition(), TileType::Free);
+
+	  // Set state
+	  state = MachineState::Forward;
+	  
+	}
+      else if(distance < 20 && distance > 3)
+	{
+	  // Set map+1 as block
+	  Point pos = this->getPosition();
+	  std::cout << pos.x << "\t" << pos.y << std::endl;
+	  pos = IncreasePointByDirection(pos, direction);
+	  std::cout << pos.x << "\t" << pos.y << std::endl;
+
+	  // dont update position to handler
+	  this->setTile(pos, TileType::Block);
+	  
+	  // Set state
+	  state = MachineState::TurnRight;
+	}
+      else
+	{
+	  // Abort, failure has happened halt everything
+	}
+
+
+      // Handle the current state
+      switch (state)
+	{
+	case MachineState::Standby:
+	  // Do nothing
+	  print_msg("Standing by..");
+	  break;
+	case MachineState::Forward:
+	  // Drive forward
+	  print_msg("Driving forward");
+	  break;
+	case MachineState::TurnRight:
+	  // Turn right
+	  direction = UpdateDirectionByTurn(direction, Direction::Right);
+	  print_msg("Turning right");
+	  break;
+
+	}
+
+
+      //      rob_sleep(freq);
+   }
+}
+
 
 // Sets the current position of the robot on the map
 /**  

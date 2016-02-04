@@ -57,115 +57,6 @@ void signal_callback_handle(int _signalnum)
     }
 }
 
-void mapmodeFunc(MapHandler* maphandler)
-{
-  // setup, initialize
-  mapmodeThreadRun = true;
-  const uint16_t freq = 5000;
-  MachineState state = MachineState::Standby;
-  Direction direction = Direction::Up;
-
-  print_msg("Map mode thread, started and running");
-
-
-  while (mapmodeThreadRun)
-    {
-      print_msg("Map mode..");
-      
-      switch (direction)
-	{
-	case Direction::Up:
-	  print_msg("Direction facing up");
-	  break;
-	case Direction::Down:
-	  print_msg("Direction facing down");
-	  break;
-	case Direction::Right:
-	  print_msg("Direction facing right");
-	  break;
-	case Direction::Left:
-	  print_msg("Direction facing left");
-	  break;
-	}
-
-      Point p = maphandler->getPosition();
-      std::cout << "Position : [ " << p.x << " , " << p.y << " ]"<< std::endl;
-      
-      // Check distance:
-      // if distance greater than 20
-      //     Drive forward
-      //     goto Check distance
-      // else
-      //     update map
-      //     turn left OR turn right
-      //     goto Check distance
-
-      // Do the logic for setting the current state
-      auto distance = 15 ; //current_distance;
-      state = MachineState::Standby;
-
-      if (distance > 20)
-	{
-	  // update position
-	  Point pos = maphandler->getPosition();
-	  std::cout << pos.x << "\t" << pos.y << std::endl;
-	  pos = IncreasePointByDirection(pos, direction);
-	  std::cout << pos.x << "\t" << pos.y << std::endl;
-	  maphandler->setPosition(pos);
-	  
-	  // set mapp as free
-	  maphandler->setTile(maphandler->getPosition(), TileType::Free);
-
-	  // Set state
-	  state = MachineState::Forward;
-	  
-	}
-      else if(distance < 20 && distance > 3)
-	{
-	  // Set map+1 as block
-	  Point pos = maphandler->getPosition();
-	  std::cout << pos.x << "\t" << pos.y << std::endl;
-	  pos = IncreasePointByDirection(pos, direction);
-	  std::cout << pos.x << "\t" << pos.y << std::endl;
-
-	  // dont update position to handler
-	  maphandler->setTile(pos, TileType::Block);
-	  
-	  // Set state
-	  state = MachineState::TurnRight;
-	}
-      else
-	{
-	  // Abort, failure has happened halt everything
-	}
-
-
-      // Handle the current state
-      switch (state)
-	{
-	case MachineState::Standby:
-	  // Do nothing
-	  print_msg("Standing by..");
-	  break;
-	case MachineState::Forward:
-	  // Drive forward
-	  print_msg("Driving forward");
-	  break;
-	case MachineState::TurnRight:
-	  // Turn right
-	  direction = UpdateDirectionByTurn(direction, Direction::Right);
-	  print_msg("Turning right");
-	  break;
-
-	}
-
-
-      //      rob_sleep(freq);
-   }
-}
-
-
-
 
 int main()
 {
@@ -188,15 +79,13 @@ int main()
   DC_Motor motorB(PIN19, PIN21, PIN23);
   SonicSensor soundSensor(PIN16, PIN18);
 
+  // Steering module
   MotorController controller(&motorA, &motorB);
 
 
 
   // Initialize networking
   Network net("localhost", 1000);
-
-  // Initialize atomic variables
-  mapmodeThreadRun = false;
 
   
   // Scheduler
@@ -225,6 +114,7 @@ int main()
 
   // start up sensor
   soundSensor.AutoLoop();
+  
 
   while (prog_running)
     {
@@ -264,7 +154,7 @@ int main()
 		  if (buffer.compare("CLIENT_DISCONNECT")==0)
 		    {
 		      print_warning("Recieved DISONNECT signal, closing down");
-		      net.WriteText(comm_REPLY_DISCONNECT);
+		      net.WriteText("Closing down");
 		      prog_running = false;
 		      break;
 		    }	  
@@ -330,16 +220,11 @@ int main()
 		     }
 		   else if(buffer.compare("CLIENT_MAP_MODE_START")==0)
 		     {
-		       if (mapmodeThreadRun.load() == false)
-			 {
-			   print_warning("Starting map mode");
-			   std::thread mapmodeThread (mapmodeFunc, &mapHandler);
-			   mapmodeThread.detach();
-			 }
+		       mapHandler.MapModeStart(&controller, &soundSensor);
 		     }
 		   else if(buffer.compare("CLIENT_MAP_MODE_STOP")==0)
 		     {
-		       mapmodeThreadRun.store(false);
+		       mapHandler.MapModeStop();
 		     }
 		   else
 		     {
@@ -358,12 +243,6 @@ int main()
 	}     
     }
   
-
-
-  // Exit threads
-  mapmodeThreadRun = false;
-
-
   
   // just exit
   return EXIT_SUCCESS;
