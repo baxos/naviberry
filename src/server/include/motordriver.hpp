@@ -1,6 +1,6 @@
 /**
   * @file motordriver.hpp
-  * @Author Jan Emil Bacher
+  * @author Jan Emil Bacher
   * @date 2015-2016
   * @brief This class is used for controlling h-bridge connected with one dc-motor.
   *

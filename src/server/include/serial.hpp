@@ -4,6 +4,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+
+/**
+ * @class SerialComm
+ * @brief *** CURRENTLY OBSOLETE ***
+ *
+ **/
 class SerialComm
 {
 private:

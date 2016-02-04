@@ -1,6 +1,6 @@
 /**
   * @file motordriver.cpp
-  * @Author Jan Emil Bacher
+  * @author Jan Emil Bacher
   * @date 2015-2016
   * @brief This file is used for directly controlling a dc motor
   *

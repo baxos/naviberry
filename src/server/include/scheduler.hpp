@@ -4,6 +4,16 @@
 #include <iostream>
 #include <cstdint>
 
+
+/**
+ * @class Scheduler
+ * @brief *** NEEDS REWORK ***
+ *
+ *
+ * Scheduler class, right now it is obsolete. But I think it should come handy again later.
+ *
+ * Ofc with a rework, the next scheduler should control the threads spawned by different classes run time instead
+ **/
 class Scheduler
 {
 private:

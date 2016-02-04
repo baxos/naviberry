@@ -8,6 +8,13 @@
 #include<map>
 
 
+/**
+ * @class NaviBuffer
+ * @brief *** NEEDS REWORK ***
+ * 
+ *
+ * This is the buffer used by the Network class. Only function of this class is to store/delete data.
+ **/
 class NaviBuffer
 {
 private:

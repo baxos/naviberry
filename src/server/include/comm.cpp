@@ -41,6 +41,13 @@ std::map<uint16_t, bool> NetworkPacket::idMap = {};
 // NetworkPacket constructor
 // set unique id
 // increment static counter
+/**
+  * @name NetworkPacket
+  * @brief Constructs the class
+  * @retval None
+  *
+  * Constructs the class, set the unique ID, increment id counter or reset it
+  **/
 NetworkPacket::NetworkPacket()
 {
   // Set id upon class creation
@@ -68,6 +75,15 @@ NetworkPacket::NetworkPacket()
 // NetworkPacket deconstructor
 // remove id from map
 // if data is filled, free it
+/**
+  * @name ~NetworkPacket
+  * @brief Deconstruct the class
+  * @retval None
+  *
+  *
+  * Deconstructs the class, free the memory used. 
+  * Let the class know, that the unique ID is now free for use.
+  **/
 NetworkPacket::~NetworkPacket()
 {
   if(debugFlag)
@@ -100,6 +116,18 @@ NetworkPacket::~NetworkPacket()
 
 }
 
+
+/**
+  * @name CreateDataPacket
+  * @brief Creates a NetworkPacket
+  * @param uint8_t* _data : Pointer to byte array
+  * @param uint32_t _dataSize : Size of the array
+  * @param uint8_t _type : Which channel
+  *
+  *
+  * Constructs a header and body packet out of the data given. 
+  * Used for sending information in a controlled way.
+  **/
 void NetworkPacket::CreateDataPacket(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
 {
   // Set the header packet
@@ -144,6 +172,16 @@ void NetworkPacket::CreateDataPacket(uint8_t* _data, uint32_t _dataSize, uint8_t
     print_msg("Packets constructed");
 }
 
+/**
+  * @name CreateTextPacket
+  * @brief Creates a NetworkPacket
+  * @param string txt : The text string
+  * @retval None
+  *
+  *
+  * Constructs a header and body packet from the text string given.
+  * This is used for sending text messages back and forth between client/server.
+  **/
 void NetworkPacket::CreateTextPacket(std::string txt)
 {
   // set header packet
@@ -194,13 +232,19 @@ void NetworkPacket::CreateTextPacket(std::string txt)
 // Network Class Constructor
 // Takes input host nd port
 // sets class variables
+/**
+  * @name Network
+  * @brief Constructs the Network class
+  * @param string _host : Host address
+  * @param uint16_t _port : Port
+  * @retval None
+  *
+  *
+  * Initializes the Network class, sets data to local class.
+  * Initializing buffer.
+  **/
 Network::Network(std::string _host, uint16_t _port)
 {
-  print_msg("Network constructor() called");
-  print_msg("Set class variables..");
-  print_msg("Set standard buffer size to 100.000 bytes");
-
-
   // Initialize buffer
   cbuffer = new NaviBuffer(100000);
 
@@ -244,6 +288,25 @@ void Network::setBufferSize(uint32_t size)
   */
 }
 
+/**
+  * @name CreateServer
+  * @brief Makes the class act as server
+  * @retval True on success
+  * @retval False on error
+  *
+  * 
+  * This function runs following commands :
+  *
+  * Create socket
+  *
+  * Bind socket
+  *
+  * Listen on socket
+  *
+  * Accept connection
+  *
+  * If any of the steps fails, it will return false
+  **/
 bool Network::CreateServer()
 {
   bool success = true;
@@ -398,6 +461,15 @@ bool Network::Accept()
 
 
 
+/**
+  * @name writeRaw
+  * @brief Writes raw data to the connected socket
+  * @param uint8_t* val : Pointer to byte array
+  * @param size_t len : The size of the data
+  * @retval True on success
+  * @retval False on error
+  *
+  **/
 bool Network::writeRaw(uint8_t* val, size_t len)
 {
   auto n = send(confd, val, len, 0);
@@ -419,7 +491,17 @@ bool Network::writeRaw(uint8_t* val, size_t len)
     }
 }
 
-
+/**
+  * @name writeData
+  * @brief Writes data to specified chanel
+  * @param uint8_t* _data : Pointer to the byte array
+  * @param uint32_t _dataSize : Size of the data
+  * @param uint8_t _type : Which channel
+  * @retval None
+  *
+  *
+  * Writes out raw data to the connected client on a specified channel.
+  **/
 void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
 {
   NetworkPacket packet;
@@ -480,6 +562,13 @@ void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
 // Takes a std::string as input 
 // attempts to send the data to the connected socket
 // on succes true is returned, false is returned on error
+/**
+  * @name WriteText
+  * @brief Writes text to the connected
+  * @param string _txt : The text string
+  * @retval None
+  *
+  **/
 void Network::WriteText(std::string _txt)
 {
   // Create packet container
@@ -539,28 +628,6 @@ void Network::WriteText(std::string _txt)
       print_warning("Failed to send package");
     }
 }
-
-
-bool Network::SendTextPacket(std::string txt)
-{
-
-  // NetworkPacket packet;
-  //  packet.CreateTextPacket(txt);
-  
-  // write header
-
-
-  return true;
-}
-
-
-bool Network::SendBinaryPacket(uint8_t* data)
-{
-
-}
-
-
-
 
 
 // Netowrk CheckForCombinations void function
@@ -814,6 +881,15 @@ void Network::CheckForPackets()
 // from the connected socket
 // on success the bytes are added to the network buffer
 // so the network packet handlers can find and match packets correctly.
+/**
+  * @name Read
+  * @brief Tries to read data from the connected.
+  * @retval None
+  *
+  *
+  * This function will read data from the connected socket. Maximum read data at once is 1024 bytes.
+  * If any data is read, it will be added to the class buffer, for later to be analyzed.
+  **/
 void Network::Read(void)
 {
   auto n                          = 0;
@@ -837,25 +913,5 @@ void Network::Read(void)
       if (debugFlag)
 	print_msg("Added data to buffer");
 
-      /*for (auto i = 0; i < n; i++)
-	{
-	  // Check for overflow
-	  if ( (buffer_offset + n) >= buffer_size)
-	    {
-	      print_error("Network buffer is full!");
-	    }
-	  // Check for buffer is not null
-	  if (buffer == NULL)
-	    {
-	      print_error("Buffer is not initialized!!");
-	    }
-	  // If not
-	  buffer[buffer_offset] = local_buffer[i];
-	  buffer_offset++;
-	}
-      */
     }
-
-  if (debugFlag)
-    print_msg("Return call");
 }

@@ -66,6 +66,21 @@ SonicSensor::~SonicSensor()
 }
 
 /**
+  * @name getReading()
+  * @brief Returns the last reading.
+  * @retval int32_t Distance
+  * 
+  * 
+  * This function should only be called, if AutoLoop() has been called.
+  * This function will simply return the last reading from the AutoLoop
+  **/
+int32_t SonicSensor::getReading()
+{
+  return lastReading;
+}
+
+
+/**
   * @name AutoLoop
   * @brief Loop the sensor readings
   * @retval None

@@ -58,7 +58,7 @@ void MotorController::Stop()
 }
 
 /**
-  * @nme TurnRight
+  * @name TurnRight
   * @brief Makes the motors turn to right.
   * @retval None
   *

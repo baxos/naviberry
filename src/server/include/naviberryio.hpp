@@ -35,15 +35,4 @@ void print_error(std::string error);
 void print_str(std::stringstream& sstream);
 
 
-class NaviberryIO
-{
-
-
-public:
-  uint8_t* reserveBytes(uint32_t _size);
-};
-
-
-
-
 #endif

@@ -1,11 +1,13 @@
 #ifndef COMM__HPP
 #define COMM__HPP
-/*
-  Filename    : comm.hpp
-  Author      : J.E Bacher
-  Description : Network class header, contains string constants of various server messages
-                and have the network class for handling the communication.
-*/
+/**
+  * @name comm.hpp
+  * @author Jan Emil Bacher
+  * @date 2015-2016
+  *
+  *
+  * Communication and networking.
+  **/
 #include <string>
 #include <cstdint>
 #include <map>
@@ -17,7 +19,7 @@ extern "C"
 #include <netinet/in.h>
 }
 #include "./cbuffer.hpp"
-//struct sockaddr_in;
+
 
 
 #define TEXT_TYPE             0XFF
@@ -29,6 +31,22 @@ extern "C"
 // Network packet structs and class
 // this is used to by the network class to send data between client<->se
 
+
+
+/**
+  * @struct HeaderPacket
+  * @brief The header part of the NetworkPacket
+  * @var HeaderPacket::packetSize
+  * Size of this packet.
+  * @var HeaderPacket::dataType
+  * The type of this packet
+  * @var HeaderPacket::dataId
+  * The unique ID of the packet
+  * @var HeaderPacket::dataSize
+  * The size of the data the body packet contains
+  * @var HeaderPacket::bodyPacketSize
+  * The size of the BodyPacket
+  **/
 struct HEADER_PACKET
 {
   uint8_t packetSize;
@@ -38,6 +56,17 @@ struct HEADER_PACKET
   uint32_t bodyPacketSize;
 } typedef HeaderPacket;
 
+
+/**
+ * @struct BodyPacket
+ * @brief The body part of the NetworkPacket
+ * @var BodyPacket::packetSize
+ * The size of this packet.
+ * @var BodyPacket::dataId
+ * The unique ID of the packet
+ * @var BodyPacket::data
+ * The byte array
+ **/
 struct BODY_PACKET
 {
   uint32_t packetSize;
@@ -45,6 +74,10 @@ struct BODY_PACKET
   uint8_t data[4096];
 } typedef BodyPacket;
 
+/**
+ * @class TextPacket
+ * @brief Wraps data into a text packet
+ **/
 class TextPacket
 {
 public:
@@ -62,6 +95,16 @@ public:
   uint16_t    getDataId(){ return dataId;};
 };
 
+
+/**
+  * @class NetworkPacket
+  * @brief Packet used for network communication.
+  * 
+  *
+  * A NetworkPacket is the combination of the HeaderPacket and BodyPacket.
+  * All messages sent on the network consist of 1 headerpacket and 1 bodypacket.
+  * The header contain meta information and the body contains the information itself
+  **/
 class NetworkPacket
 {
 private:
@@ -92,6 +135,20 @@ public:
 //
 // Networking class
 // Handles socket TCP communcation
+
+/**
+  * @class Network
+  * @brief Master class for networking.
+  *
+  *
+  * This class contains all the functions to etablish a connection between the server and the client.
+  * And contains all the core functions of sending and recieving data.
+  *
+  * Network.Read()
+  *
+  * Network.WriteText()
+  *
+  **/
 class Network 
 {
 private:
@@ -134,24 +191,6 @@ public:                                         // Public functions
   void CheckForCombinations();
   void CheckForPackets();
 };
-
-
-// ===================================================================================================================================================== //
-// Cosntant strings for server communication
-/*
- REPLY MESSAGES
-*/
-
-const char comm_REPLY_SUCCESS[]     = "SERVER_SUCCESS\n";
-const char comm_REPLY_FAILURE[]     = "SERVER_FAILURE\n";
-const char comm_REPLY_WAITING[]     = "SERVER_WAITING\n";
-const char comm_REPLY_PONG[]        = "SERVER_PONGING\n";
-const char comm_REPLY_DISCONNECT[]  = "SERVER_DISCONNECT\n";
-const char comm_REPLY_BUSY[]        = "SERVER_BUSY\n";
-const char comm_REPLY_UNKNOWN_CMD[]   = "SERVER_UNKOWN_COMMAND\n";
-
-//
-//========================================================================================================================================================= //
 
 
 #endif

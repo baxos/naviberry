@@ -1,6 +1,6 @@
 /**
   * @file motorcontroller.hpp
-  * @Author Jan Emil Bacher
+  * @author Jan Emil Bacher
   * @date 2015-2016
   * @brief This class is used for controlling h-bridge connected with one dc-motor.
   *
@@ -14,11 +14,12 @@
 
 /**
   * @class MotorController
-  * @brief A class designed for making an easy to use API for controlling a h-bridge.
+  * @brief Used for control steering and navigation.
   * 
   *
   * The class is designed for be as simple to use as possible. 
-  * It is designed for use with a h-bridge and a dc-motor connected to that.
+  * This class combines DC_Motor class and the Maphandling in one class
+  * which will conttrol it all.
   */
 class MotorController
 {

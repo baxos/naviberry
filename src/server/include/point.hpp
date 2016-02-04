@@ -1,8 +1,23 @@
+/**
+  * @file point.hpp
+  * @author Jan Emil Bacher
+  * @date 2016
+  * @brief This class is abstraction of a Point
+  **/
+
 #ifndef POINT__HPP
 #define POINT__HHPP
 
 #include <cstdint>
 
+
+/**
+  * @class Point
+  * @brief Used for Math, MapHandling etc.
+  * 
+  *
+  * This class is an abstraction of the 'Point'. This is used in maphandling and navigation
+  **/
 class Point
 {
 public:
