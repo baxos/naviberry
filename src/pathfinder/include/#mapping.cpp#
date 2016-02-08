@@ -1,0 +1,35 @@
+#include <cstdint>
+#include <vector>
+#include "./mapping.hpp"
+
+using namespace std;
+
+void Map::GenerateEmptyMap()
+{
+  for (auto i = 0; i < ysize; i++)
+    {
+      vector<uint8_t> v;
+      for (auto j = 0; j < xsize; j++)
+	{
+	  v.push_back(0);
+	}
+
+      map.push_back(v);
+    }
+}
+
+vector< vector<uint8_t> > Map::getMap()
+{
+  return map;
+}
+
+Map::Map(int x, int y)
+{
+  ysize = y;
+  xsize = x;
+}
+
+
+
+
+

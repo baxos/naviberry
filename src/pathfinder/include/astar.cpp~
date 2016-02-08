@@ -1,0 +1,326 @@
+#include <iostream>
+#include <algorithm>
+#include <thread>
+#include <chrono>
+
+#include "./astar.hpp"
+
+#define SLEEP_DURATION 1000 // 1000 ms / 1 sec
+
+
+AStar::AStar(vector< vector<uint8_t> > map)
+{
+  // Initialize graph
+  int x,y;
+  y=0;
+  x=0;
+
+  goalReached = false;
+
+  std::cout << "Starting to analyze data" << std::endl;
+  std::cout << "Pool : " << map.size() << std::endl;
+
+  for (auto it = map.begin(); it != map.end(); it++)
+    {
+      for (auto jt = it->begin(); jt != it->end(); jt++)
+	{
+	  GraphNode n;
+	  n.setPosition(x, y);
+	  n.setH(this->ManhattenCost(targetPt, n.getPosition()));
+	  graph.push_back(n);
+	  
+	  x++;
+	}
+
+      xmax = x;
+      x= 0;
+      y++;
+    }
+
+
+  ymax = y;
+
+  cout << "XMAX : " << xmax << "\t YMAX : " << ymax << endl;
+
+}
+
+int AStar::ManhattenCost(Point target, Point start)
+{
+  int result = 0;
+  int dx = target.x - start.x;
+  int dy = target.y - start.y;
+
+
+  if (dx < 0)
+    dx = dx * (-1);
+
+  if (dy < 0)
+    dy = dy * (-1);
+
+  result = dx + dy;
+
+  return result;
+}
+
+vector<GraphNode> AStar::getNeighbours(GraphNode node)
+{
+  vector<GraphNode> result;
+  Point pt = node.getPosition();
+  Point newPt = pt;
+
+
+  // get upper
+  newPt.y -= 1;
+  if (newPt.y >= 0)
+    {
+	  result.push_back(*FindNodeByPosition(newPt));
+    }
+  
+  // get lower
+  newPt = pt;
+  newPt.y += 1;
+  if (newPt.y < ymax)
+    {
+	    result.push_back(*FindNodeByPosition(newPt));
+    }
+
+  // get left
+  newPt = pt;
+  newPt.x -= 1;
+  if (newPt.x >= 0)
+    {
+	    result.push_back(*FindNodeByPosition(newPt));
+    }
+
+
+  // get right
+  newPt = pt;
+  newPt.x += 1;
+  if (newPt.x <= xmax)
+    {
+	  result.push_back(*FindNodeByPosition(newPt));
+    }
+
+  cout << "Adding : " << result.size() << " elements" << endl;
+
+  return result;
+}
+
+GraphNode* AStar::FindNodeByPosition(Point target)
+{
+  // Iterate through all elements
+  int counter = 0;
+  for (auto v : graph)
+    {
+      if ((v.getPosition().x == target.x) && (v.getPosition().y == target.y))
+	{
+	  // found it
+	  return &graph[counter];
+	}
+
+      counter++;
+    }
+}
+
+int AStar::getTotalGraphCount()
+{
+  return graph.size();
+}
+
+
+void AStar::Start()
+{
+  // get starting node
+  GraphNode* currentNode = FindNodeByPosition(startPt);
+  currentNode->parent = nullptr;
+
+  cout <<"Starting..."<<endl;
+
+  // start node has no g cost
+  currentNode->setG(0);
+
+
+  // Add it to closed
+  closed.push_back(*currentNode);
+
+  // get its neighbours
+  vector<GraphNode> vneigh = this->getNeighbours(*currentNode);
+  for (auto v : vneigh)
+    {
+      auto neighbour = v;
+      neighbour.setG(currentNode->getG() + 10);
+      neighbour.setParent(currentNode);
+      // update cost
+      // set parent
+
+
+      // add to open
+      open.push_back(neighbour);
+    }
+
+  cout << "Entering loop" << endl;
+  while (goalReached == false)
+    {
+      // Every iteration
+      // print vector counts
+      cout << "Data[index] = [" << FindLowestIndex() << "] " << open[FindLowestIndex()].getPosition().x << endl;
+      cout << "Open   :" << open.size() << endl;
+      cout << "Closed :" << closed.size() << endl; 
+
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_DURATION));
+
+
+
+      currentNode = FindLowestNode();
+
+      checkedBoxes.push_back(currentNode->getPosition());
+      
+      // add to closed
+      this->AddToClosed(*currentNode);
+
+      auto index_offset = FindLowestIndex();
+      open.erase(open.begin() + index_offset);
+
+      // get neighbour
+      vneigh = this->getNeighbours(*currentNode);
+
+      for (auto v : vneigh)
+	{
+	  auto neighbour = v;
+	  
+	  if (OpenContains(neighbour))
+	    {
+	      // compare cost
+	      if (neighbour.getCost() > currentNode->getG() + 10)
+		{
+		  // if this cost less
+		  // change it 
+		  neighbour.setG(currentNode->getG() + 10);
+		  neighbour.setParent(currentNode);
+		}
+	    }
+	  else
+	    {
+	      // update cost
+	      neighbour.setG(currentNode->getG() + 10);
+	      neighbour.setParent(currentNode);
+	      // if is goal node
+	      if (v.getPosition().x == targetPt.x && v.getPosition().y == targetPt.y)
+		{
+		  goalReached = true;
+		  
+		  this->getGoalRoute(&neighbour);
+		}
+	      
+	      // add to open
+	      this->AddToOpen(neighbour);
+	    }
+	  
+	}
+    }
+}
+
+bool AStar::OpenContains(GraphNode g)
+{
+  for (auto v : open)
+    {
+      if (v == g)
+	return true;
+    }
+
+  return false;
+}
+
+bool AStar::ClosedContains(GraphNode g)
+{
+  for (auto v : closed)
+    {
+      if (v == g)
+	return true;
+    }
+
+  return false;
+}
+
+void AStar::AddToClosed(GraphNode g)
+{
+  // Check if already on list
+  auto alreadyOnList = false;
+  if (ClosedContains(g) == false)
+    {
+      // add to closed list
+      closed.push_back(g);
+    }
+}
+
+void AStar::AddToOpen(GraphNode g)
+{
+  if (OpenContains(g) == false && ClosedContains(g) == false)
+    {
+      open.push_back(g);
+    }
+}
+
+int AStar::FindLowestIndex()
+{
+  int res = 999999999;
+  int counter = 0;
+  int low = 9999;
+
+  for ( auto v : open)
+    {
+      if (v.getCost() < low)
+	{
+	  res = counter;
+	  low = v.getCost();
+	}
+
+      counter++;
+    }
+
+
+  cout << "Lowest : " << res << "\t elements : " << open.size() << endl;
+  return res;
+}
+
+GraphNode* AStar::FindLowestNode()
+{
+  auto i = FindLowestIndex();
+
+  return &graph[i];
+}
+
+
+void AStar::setTarget(Point _pt)
+{
+  targetPt = _pt;
+}
+
+void AStar::setStart(Point _pt)
+{
+  startPt = _pt;
+}
+
+
+vector<GraphNode> AStar::getGoalRoute(GraphNode* goalNode)
+{
+  vector<GraphNode> route;
+  GraphNode* currentNode = goalNode;
+
+
+  while (currentNode->parent != nullptr)
+    {
+      route.push_back(*currentNode);
+      printf("X: %d \t Y: %d \n", currentNode->getPosition().x, currentNode->getPosition().y);
+      currentNode = currentNode->parent;
+    }
+
+  return route;
+}
+
+
+vector<Point> AStar::getCheckedBoxes()
+{
+  return checkedBoxes;
+}
