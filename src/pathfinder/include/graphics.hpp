@@ -9,8 +9,7 @@ using namespace std;
 
 struct Point
 {
-  uint8_t x;
-  uint8_t y;
+  int x, y;
 
   Point operator=(const Point& other)
   {

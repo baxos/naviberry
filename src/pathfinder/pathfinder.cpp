@@ -63,28 +63,21 @@ int main(int argc, char* argv[])
     }
 
 
-  AStar astar(m.getMap(), 10, 10);
 
-  
+  // Make target
   Point target;
   target.x = 9;
   target.y = 9;
+
+  // Make start point
   Point start;
-  start.x = 3;
+  start.x = 2;
   start.y = 2;
 
+  AStar astar(m.getMap(), 10, 10, &target, &start);
 
 
-  cout << "Done, analyzing map data, preparing graphics" << endl;
-  //  cout << "Total graph count : " << astar.getTotalGraphCount() << endl;
-  cout << "Stating calculating on route" << endl;
-
-
-  astar.setTarget(target);
-  astar.setStart(start);
-
-
-   g.ConstructImage(m.getMap());
+  g.ConstructImage(m.getMap());
 
 
 

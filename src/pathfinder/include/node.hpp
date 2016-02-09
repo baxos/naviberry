@@ -15,8 +15,10 @@ class GraphNode
 private:
   Point pos;
   int g,h,f;
+  void UpdateCost();
 public:
   GraphNode *parent;
+  GraphNode();
   int getCost();
   int getG();
   void setParent(GraphNode* _par);

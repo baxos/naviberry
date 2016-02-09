@@ -1,20 +1,39 @@
 #include "./node.hpp"
 
+GraphNode::GraphNode()
+{
+  this->h = 0;
+  this->f = 0;
+  this->g = 0;
+
+  this->parent = nullptr;
+}
+
+
 void GraphNode::setH(int val)
 {
   this->h = val;
+
+  this->UpdateCost();
 }
 
 void GraphNode::setG(int val)
 {
   this->g = val;
 
-  this->setF(g + h);
+  this->UpdateCost();
 }
 
 void GraphNode::setF(int val)
 {
   this->f = val;
+
+  this->UpdateCost();
+}
+
+void GraphNode::UpdateCost()
+{
+  this->f = this->g + this->h;
 }
 
 int GraphNode::getCost()
@@ -28,7 +47,7 @@ void GraphNode::setPosition(int x, int y)
   p.x = x;
   p.y = y;
 
-  pos = p;
+  this->pos = p;
 }
 
 void GraphNode::setParent(GraphNode *_par)
