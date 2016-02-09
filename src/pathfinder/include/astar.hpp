@@ -14,8 +14,8 @@ class AStar
 {
  private:
   GraphNode** graph;
-  vector<GraphNode*> open;
-  vector<GraphNode*> closed;
+  list<Point> open;
+  list<Point> closed;
   vector<GraphNode> checked;
   vector<Point> openPoints;
   vector<Point> checkedBoxes;
@@ -35,8 +35,8 @@ public:
   ~AStar();
   int getTotalGraphCount();
   void Start();
-  bool ClosedContains(GraphNode g);
-  bool OpenContains(GraphNode g);
+  bool ClosedContains(Point g);
+  bool OpenContains(Point  g);
   vector<Point> getCheckedBoxes();
 
   void PrintOpen();

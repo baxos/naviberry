@@ -187,8 +187,7 @@ void AStar::Start()
 
 
   // add to open list
-  openPoints.push_back(currentNode->getPosition());
-  open.push_back(currentNode);
+  open.push_back(currentNode->getPosition());
 
   cout << "Entering loop" << endl;
   while (open.size() > 0)
@@ -210,7 +209,7 @@ void AStar::Start()
 
       // Add to closed list
       cout << "Adding current node to closed list" << endl;
-      closed.push_back(currentNode);
+      closed.push_back(currentNode->getPosition());
 
 
       // Check if this is the goal node
@@ -235,22 +234,22 @@ void AStar::Start()
       for (auto v : vneigh)
 	{
 	  // If its blocked or already in closed list, skip it
-	  if (v.getCost() > 100000 || ClosedContains(v))
+	  if (v.getCost() > 100000 || ClosedContains(v.getPosition()))
 	    continue;
 
 	  // calculate path cost
 	  auto pathcost = currentNode->getCost() + 10;
 	  // If new cost is lower than current, update to this path
 	  // Or if the box hasn't been checked yet, update to this path
-	  if (pathcost < v.getCost() || OpenContains(v) == false)
+	  if (pathcost < v.getCost() || OpenContains(v.getPosition()) == false)
 	    {
 	      v.setG(pathcost);
 	      v.setParent(currentNode);
 
 	      // Add to open, if not already there
-	      if (OpenContains(v) == false)
+	      if (OpenContains(v.getPosition()) == false)
 		{
-		  open.push_back(&v);
+		  open.push_back(v.getPosition());
 		}
 	    }
 	  
@@ -268,25 +267,25 @@ void AStar::PrintOpen()
   cout << "=========== Dumpimg list ============ " << endl;
   for (auto v : open)
     {
-      printf ("[%d] POS : %d , %d \t Cost = %d \n", counter, v->getPosition().x, v->getPosition().y, v->getCost());
+      printf("[%d] : [x, y] \t [ %d , %d ] \n", counter, v.x, v.y);
       counter++;
     }
 }
 
-bool AStar::OpenContains(GraphNode g)
+bool AStar::OpenContains(Point g)
 {
-  for (auto v : open)
+  for ( auto& v : open)
     {
-      if (*v == g)
+      if (v == g)
 	return true;
     }
 
   return false;
 }
 
-bool AStar::ClosedContains(GraphNode g)
+bool AStar::ClosedContains(Point g)
 {
-  for (auto v : closed)
+  for (auto& v : closed)
     {
       if (*v == g)
 	return true;
@@ -306,26 +305,22 @@ GraphNode* AStar::FindLowestNode()
   GraphNode* n;
   GraphNode* res;
 
-  for (auto it = open.begin(); it != open.end(); it++)
+  for (auto &v : open)
     {
-      n = *it;
-
-      printf("Current cost : %d \t Current low : %d \n", n->getCost(), low);
-
-      if (n->getCost() < low)
+      GraphNode g = v;
+      if (g.getCost() < low)
 	{
-	  index = counter;
-	  low = n->getCost();
+	  n = &g;
+	  low = v->getCost();
 	}
-   
-      counter++;
+      
     }
 
   
-  res = *(open.begin() + index);
 
 
-  printf("\t Found [Node] X : %d \t Y : %d \t Cost : %d \n", res->getPosition().x, res->getPosition().y, res->getCost());
+
+  printf("\t Found [Node] X : %d \t Y : %d \t Cost : %d \n", n->getPosition().x, n->getPosition().y, n->getCost());
   return n;
 
    //   open.erase(open.begin() + i);
