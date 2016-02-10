@@ -109,9 +109,6 @@ int main(int argc, char* argv[])
   cout << "[Time spent] : " << diff.count() << " secs.." << endl;
 
 
-  string test;
-  cin >> test;
-
   // start main loop
   while (quit != true)
     {
