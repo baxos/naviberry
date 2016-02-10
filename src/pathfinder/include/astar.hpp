@@ -9,13 +9,17 @@
 #include "./graphics.hpp"
 #include "./node.hpp"
 
+#define GRAPH_X_MAX 50
+#define GRAPH_Y_MAX 50
+
 
 class AStar
 {
  private:
-  GraphNode** graph;
+  GraphNode graph[GRAPH_X_MAX][GRAPH_Y_MAX];
   list<Point> open;
   list<Point> closed;
+  list<Point> goalRoute;
   vector<GraphNode> checked;
   vector<Point> openPoints;
   vector<Point> checkedBoxes;
@@ -25,21 +29,23 @@ class AStar
   int ymax, xmax;
   Point targetPt;
   Point startPt;
+
+  void ConstructGoalRoute(GraphNode* goalNode);
+  Point FindLowestNode();
+  bool ClosedContains(Point g);
+  bool OpenContains(Point g);
+ 
+  void PrintOpen();
+  void PrintClosed();
 public:
   int ManhattenCost(Point target, Point start);
   vector<GraphNode> getNeighbours(GraphNode* node);
-  vector<GraphNode> getGoalRoute(GraphNode* goalNode);
-  GraphNode *FindLowestNode();
-  int FindLowestIndex();
   AStar(vector <vector<uint8_t> > map, int maxX, int maxY, Point* _target, Point* _start);
-  ~AStar();
   int getTotalGraphCount();
   void Start();
-  bool ClosedContains(Point g);
-  bool OpenContains(Point  g);
   vector<Point> getCheckedBoxes();
-
-  void PrintOpen();
+  list<Point> getGoalRoute();
+  bool isGoalReached();
 };
 
 

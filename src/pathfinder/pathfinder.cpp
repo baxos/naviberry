@@ -23,6 +23,9 @@
 #define SCREEN_HEIGHT 1100
 #define SCREEN_WIDTH 1200
 
+#define GAME_X 50
+#define GAME_Y 50
+
 using namespace std;
 
 
@@ -44,7 +47,7 @@ int main(int argc, char* argv[])
   
   
   // If user asked for window, create it
-  win = SDL_CreateWindow("Navicon", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+  win = SDL_CreateWindow("Naviberry pathfinder", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
   if (win == nullptr)
     return EXIT_FAILURE;
 
@@ -54,7 +57,7 @@ int main(int argc, char* argv[])
 
 
   Graphics g(renderer);
-  Map m(10, 10);
+  Map m(GAME_X, GAME_Y);
 
   m.GenerateEmptyMap();
   for (auto i=0; i < 7; i++)
@@ -66,15 +69,15 @@ int main(int argc, char* argv[])
 
   // Make target
   Point target;
-  target.x = 9;
-  target.y = 9;
+  target.x = 48;
+  target.y = 48;
 
   // Make start point
   Point start;
   start.x = 2;
   start.y = 2;
 
-  AStar astar(m.getMap(), 10, 10, &target, &start);
+  AStar astar(m.getMap(), GAME_X, GAME_Y, &target, &start);
 
 
   g.ConstructImage(m.getMap());
@@ -87,11 +90,7 @@ int main(int argc, char* argv[])
 
 
 
-  // spawn thread for solve the pathfinding
-  std::thread astarSolver (&AStar::Start, astar);
-
-
-
+  
 
   // Prepare graphics
 
@@ -110,6 +109,11 @@ int main(int argc, char* argv[])
 
 
 
+  astar.Start();
+  
+  
+
+
   // start main loop
   while (quit != true)
     {
@@ -118,16 +122,15 @@ int main(int argc, char* argv[])
       g.DrawTarget();
       g.DrawStart();
       g.DrawGrid();
-
-      // if we have checked boxes, draw them
-      auto checkedboxes = astar.getCheckedBoxes();
-
-      if(checkedboxes.size() > 1)
-	{
-	  g.DrawVisited(astar.getCheckedBoxes());
-	}
       
-	SDL_RenderPresent(renderer);
+      // if we have goal route
+      if (astar.isGoalReached())
+	{
+	  g.DrawVisited(astar.getGoalRoute());
+	}
+
+      
+      SDL_RenderPresent(renderer);
       // sleep?
 
       while (SDL_PollEvent(&e))
@@ -139,6 +142,8 @@ int main(int argc, char* argv[])
 	}
     }
   
+
+
   
   SDL_DestroyWindow(win);
   SDL_Quit();

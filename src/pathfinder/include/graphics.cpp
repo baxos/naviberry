@@ -6,7 +6,7 @@
 
 
 
-#define BOX_SIZE 100;
+#define BOX_SIZE 20;
 
 using namespace std;
 
@@ -58,18 +58,22 @@ void Graphics::setColor(Color c)
       g = 0;
       b = 255;
       break;
+    case Color::DarkGreen:
+      r = 0;
+      g = 123;
+      b = 0;
+      break;
     }
 
   SDL_SetRenderDrawColor(renderer, r, g, b, 255);
 }
 
-void Graphics::DrawVisited(vector<Point> boxes)
+void Graphics::DrawVisited(list<Point> boxes)
 {
-  this->setColor(Color::Green);
+  this->setColor(Color::DarkGreen);
 
   for (auto p : boxes)
     {
-      std::cout << " Drawing checked box" << std::endl;
       SDL_Rect rect;
       rect.x = p.x * BOX_SIZE;
       rect.y = p.y * BOX_SIZE;

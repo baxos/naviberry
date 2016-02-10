@@ -5,7 +5,7 @@
 
 #include "./astar.hpp"
 
-#define SLEEP_DURATION 1000 // 1000 ms / 1 sec
+#define SLEEP_DURATION 1 // 1000 ms / 1 sec
 
 
 AStar::AStar(vector< vector<uint8_t> > map, int maxX, int maxY, Point* _target, Point* _start)
@@ -18,49 +18,23 @@ AStar::AStar(vector< vector<uint8_t> > map, int maxX, int maxY, Point* _target, 
 
   // Set flags
   isReady = false;
-  isError = false;
   goalReached = false;
 
   this->targetPt = *_target;
   this->startPt = *_start;
 
-  // Allocate data
-
-  graph = new GraphNode*[maxY];
-  if (graph == nullptr)
+  cout << "Starting to analyze data" << std::endl;
+  cout << "Pool size : " << maxX * maxY << std::endl;
+  
+  for (auto it = map.begin(); it != map.end(); it++)
     {
-      // Error
-      isError = true;
-    }
-  for (auto i = 0; i < maxY; i++)
-    {
-      graph[i] = new GraphNode[maxX];
-
-      if (graph[i] == nullptr)
+      for (auto jt = it->begin(); jt != it->end(); jt++)
 	{
-	  isError = true;
-	}
-    }
-
-
-
-
-  if (!isError)
-    {
-      cout << "Starting to analyze data" << std::endl;
-      cout << "Pool size : " << maxX * maxY << std::endl;
-
-      for (auto it = map.begin(); it != map.end(); it++)
-	{
-	  for (auto jt = it->begin(); jt != it->end(); jt++)
-	    {
-	      GraphNode* n = new GraphNode();
-	      n->setPosition(x, y);
-	      n->setH(this->ManhattenCost(targetPt, n->getPosition()));
-	  
-	      cout << "[Adding] N = [x, y] " << n->getPosition().x << ", " << n->getPosition().y << endl;
-	      cout << "[Cost] F = " << n->getCost() << endl;
-	      graph[x][y] = *n;
+	  Point currentPt;
+	  currentPt.x = x;
+	  currentPt.y = y;
+	  graph[x][y].setPosition(x, y);
+	  graph[x][y].setH(this->ManhattenCost(targetPt, currentPt));
 	  
 	      x++;
 	    }
@@ -70,19 +44,12 @@ AStar::AStar(vector< vector<uint8_t> > map, int maxX, int maxY, Point* _target, 
 	  y++;
 	}
       ymax = y;
-    }
-
-  if (!isError)
-    {
-      cout << "Init done!" << endl;
-      isReady = true;
-    }
-  else
-    {
-      cout << "Error during init, exiting program.." << endl;
-      exit(-1);
-    }
 }
+
+
+
+  
+
 
 int AStar::ManhattenCost(Point target, Point start)
 {
@@ -109,9 +76,9 @@ vector<GraphNode> AStar::getNeighbours(GraphNode* node)
   pt.x = node->getPosition().x;
   pt.y = node->getPosition().y;
 
-  cout << "Pt     : x " << pt.x << "\t y " << pt.y << endl;  
+  //  cout << "Pt     : x " << pt.x << "\t y " << pt.y << endl;  
   Point newPt = pt;
-  cout << "newPt  : x : " << newPt.x << "\t y " << newPt.y << endl; 
+  //  cout << "newPt  : x : " << newPt.x << "\t y " << newPt.y << endl; 
   bool flowProblems = false;
 
 
@@ -143,7 +110,7 @@ vector<GraphNode> AStar::getNeighbours(GraphNode* node)
       // get lower
       newPt = pt;
       newPt.y += 1;
-      if (newPt.y < ymax)
+      if (newPt.y < ymax-1)
 	{
 	  result.push_back(graph[newPt.x][newPt.y]);
 	}
@@ -160,12 +127,12 @@ vector<GraphNode> AStar::getNeighbours(GraphNode* node)
       // get right
       newPt = pt;
       newPt.x += 1;
-      if ( (newPt.x <= xmax) )
+      if ( (newPt.x <= xmax-1) )
 	{
 	  result.push_back(graph[newPt.x][newPt.y]);
 	}
     }
-  cout << "Adding : " << result.size() << " elements" << endl;
+
   
   return result;
 }
@@ -180,21 +147,21 @@ int AStar::getTotalGraphCount()
 void AStar::Start()
 {
   // get starting node
-  GraphNode *currentNode = &graph[startPt.x][startPt.y];
-  currentNode->parent = nullptr;
-  currentNode->setH(0);
-  currentNode->setG(0);
+  GraphNode currentNode = graph[startPt.x][startPt.y];
+  currentNode.parent = END_PT;
+  currentNode.setH(0);
+  currentNode.setG(0);
 
 
   // add to open list
-  open.push_back(currentNode->getPosition());
+  open.push_back(currentNode.getPosition());
 
   cout << "Entering loop" << endl;
   while (open.size() > 0)
     {
       // Every iteration
       // print vector counts
-      this->PrintOpen();
+      //      this->PrintOpen();
 
 
       // Sleep for human viewabillity??
@@ -202,49 +169,71 @@ void AStar::Start()
 
 
       // Take lowest cost node in the open list
-      cout << "Finding lowest node in open list" << endl;
-      currentNode = FindLowestNode();
-      printf("x %d \t y %d \t cost %d", currentNode->getPosition().x, currentNode->getPosition().y, currentNode->getCost());
+      // cout << "Finding lowest node in open list" << endl;
+      auto currPt = FindLowestNode();
+      currentNode = graph[currPt.x][currPt.y];
+      printf("[CURRENT_NODE] [X,Y] { %d , %d } | Cost = %d \n", currentNode.getPosition().x, currentNode.getPosition().y, currentNode.getCost());
+
+      // Remove from open list
+      
 
 
       // Add to closed list
-      cout << "Adding current node to closed list" << endl;
-      closed.push_back(currentNode->getPosition());
+      //cout << "Adding current node to closed list" << endl;
+      closed.push_back(currentNode.getPosition());
 
 
       // Check if this is the goal node
-      cout << "Checking whether this node is goal node or not" << endl;
-      if (currentNode->getPosition().x == targetPt.x && currentNode->getPosition().y == targetPt.y)
+      // cout << "Checking whether this node is goal node or not" << endl;
+      if (currentNode.getPosition().x == targetPt.x && currentNode.getPosition().y == targetPt.y)
 	{
 	  // Goal reached
 	  cout << "Goal node reached.." << endl;
+	  printf("Parent node : { %d , %d } \n", currentNode.parent.x,
+		 currentNode.parent.y
+		 );
+	  // Construct goal 
+	  ConstructGoalRoute(&currentNode);
+
+ 
+	
 	  break;
 	}
-      else
-	{
-	  cout << "\t Not goal node" << endl;
-	}
+
 
       
       // get neighbours
-      cout << "Finding neighbour nodes to this one" << endl;
-      auto vneigh = this->getNeighbours(currentNode);
+      // cout << "Finding neighbour nodes to this one" << endl;
+      auto vneigh = this->getNeighbours(&currentNode);
 
-      cout << "Analyzing neighbour nodes" << endl;
-      for (auto v : vneigh)
+      //cout << "Analyzing neighbour nodes" << endl;
+      for (auto &v : vneigh)
 	{
+
 	  // If its blocked or already in closed list, skip it
 	  if (v.getCost() > 100000 || ClosedContains(v.getPosition()))
 	    continue;
 
 	  // calculate path cost
-	  auto pathcost = currentNode->getCost() + 10;
+	  auto pathcost = currentNode.getCost() + 10;
 	  // If new cost is lower than current, update to this path
 	  // Or if the box hasn't been checked yet, update to this path
 	  if (pathcost < v.getCost() || OpenContains(v.getPosition()) == false)
 	    {
-	      v.setG(pathcost);
-	      v.setParent(currentNode);
+	      Point currPt;
+	      currPt = v.getPosition();
+
+	      graph[currPt.x][currPt.y].setG(pathcost);
+
+	      
+	      graph[currPt.x][currPt.y].setParent(currentNode.getPosition());
+	      printf("Node [%d ,%d] parent = { %d, %d} \n",
+		     v.getPosition().x,
+		     v.getPosition().y,
+		     graph[v.getPosition().x][v.getPosition().y].parent.x,
+		     graph[v.getPosition().x][v.getPosition().y].parent.y
+		     );
+
 
 	      // Add to open, if not already there
 	      if (OpenContains(v.getPosition()) == false)
@@ -267,7 +256,7 @@ void AStar::PrintOpen()
   cout << "=========== Dumpimg list ============ " << endl;
   for (auto v : open)
     {
-      printf("[%d] : [x, y] \t [ %d , %d ] \n", counter, v.x, v.y);
+      //      printf("[%d] : [x, y] \t [ %d , %d ] \n", counter, v.x, v.y);
       counter++;
     }
 }
@@ -287,7 +276,7 @@ bool AStar::ClosedContains(Point g)
 {
   for (auto& v : closed)
     {
-      if (*v == g)
+      if (v == g)
 	return true;
     }
 
@@ -296,56 +285,88 @@ bool AStar::ClosedContains(Point g)
 
 
 
-GraphNode* AStar::FindLowestNode()
+Point AStar::FindLowestNode()
 {
-  int index, counter, low;
-  counter = 0;
-  index = 0;
-  low = 100000;
-  GraphNode* n;
-  GraphNode* res;
+  // Scan through all elements
+  int lowest = 9999;
+  Point result;
 
-  for (auto &v : open)
+
+  for (const auto& p : open)
     {
-      GraphNode g = v;
-      if (g.getCost() < low)
+      //      printf("Coordinate [ %d , %d ] cost = %d \n", p.x, p.y, graph[p.x][p.y].getCost());
+
+      if (graph[p.x][p.y].getCost() < lowest)
 	{
-	  n = &g;
-	  low = v->getCost();
+	  lowest = graph[p.x][p.y].getCost();
+	  result = p;
 	}
-      
     }
 
-  
-
-
-
-  printf("\t Found [Node] X : %d \t Y : %d \t Cost : %d \n", n->getPosition().x, n->getPosition().y, n->getCost());
-  return n;
-
-   //   open.erase(open.begin() + i);
-}
-
-
-
-
-
-vector<GraphNode> AStar::getGoalRoute(GraphNode* goalNode)
-{
-  vector<GraphNode> route;
-  GraphNode* currentNode = goalNode;
-
-
-  while (currentNode->parent != nullptr)
+  // Remove p from open
+  for (auto it = open.begin(); it != open.end(); it++)
     {
-      route.push_back(*currentNode);
-      printf("X: %d \t Y: %d \n", currentNode->getPosition().x, currentNode->getPosition().y);
-      currentNode = currentNode->parent;
+      if ( *it == result)
+	{
+	  open.erase(it);
+	  break;
+	}
     }
 
-  return route;
+  //  printf("\t Found [Node] X : %d \t Y : %d \t Cost : %d \n", result.x, result.y, 255);
+  return result;
 }
 
+
+
+list<Point> AStar::getGoalRoute()
+{
+  if (goalReached)
+    {
+      return goalRoute;
+    }
+}
+
+void AStar::ConstructGoalRoute(GraphNode* goalNode)
+{
+  vector<Point> route;
+  GraphNode* currentNode = goalNode;
+  Point endPt;
+  endPt.x = -10;
+  endPt.y = -10;
+
+  cout << "Constructing goal route, by reversing route" << endl;
+  printf("============================================== \n");
+
+
+  while (currentNode->getPosition() != startPt)
+    {
+      Point currPt;
+      currPt.x = currentNode->getPosition().x;
+      currPt.y = currentNode->getPosition().y;
+      Point parPt;
+      parPt.x = currentNode->parent.x;
+      parPt.y = currentNode->parent.y;
+
+      printf("X: %d \t Y: %d \n", currentNode->getPosition().x, currentNode->getPosition().y);
+
+      currentNode = &graph[parPt.x][parPt.y];
+
+      // copy to list for outsiders
+      goalRoute.push_back(currPt);
+    }
+
+  printf("================ done ============== \n");
+
+
+  // Copy to list for outsiders can reach it
+  goalReached = true;
+}
+
+bool AStar::isGoalReached()
+{
+  return goalReached;
+}
 
 vector<Point> AStar::getCheckedBoxes()
 {
@@ -357,13 +378,4 @@ vector<Point> AStar::getCheckedBoxes()
   return checkedBoxes;
 }
 
-AStar::~AStar()
-{
-  // Clean up dynamic memory!
-  for (auto i = 0; i < ymax; i++)
-    {
-      delete graph[i];
-    }
 
-  delete graph;
-}

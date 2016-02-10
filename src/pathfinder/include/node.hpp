@@ -17,11 +17,11 @@ private:
   int g,h,f;
   void UpdateCost();
 public:
-  GraphNode *parent;
+  Point parent;
   GraphNode();
   int getCost();
   int getG();
-  void setParent(GraphNode* _par);
+  void setParent(Point _par);
   void setH(int val);
   void setG(int val);
   void setF(int val);

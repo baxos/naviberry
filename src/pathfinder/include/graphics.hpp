@@ -3,9 +3,12 @@
 
 #include <cstdint>
 #include <vector>
+#include <list>
 #include <SDL2/SDL.h>
 
 using namespace std;
+
+
 
 struct Point
 {
@@ -17,16 +20,26 @@ struct Point
     this->y = other.y;
   }
 
-  bool operator==(const Point& p1, const Point& p2)
+  bool operator==(const Point& p1)
   {
-    if (p1.x == p2.x && p1.y == p2.y)
+    if (this->x == p1.x && this->y == p1.y)
       return true;
     else
       return false;
   }
+
+  bool operator!=(const Point& p1)
+  {
+    if (this->x == p1.x && this->y == p1.y)
+      return false;
+    else
+      return true;
+  }
+
+  
 };
 
-
+const Point END_PT = { -10, -10};
 
 
 
@@ -37,7 +50,7 @@ struct Pixel
   uint8_t B;
 };
 
-enum class  Color { Black, Red, Green, White, Blue };
+enum class  Color { Black, Red, Green, DarkGreen,  White, Blue };
 
 class Graphics
 {
@@ -53,7 +66,7 @@ public:
   void setStart(int x, int y);
   void DrawGrid();
   void DrawTarget();
-  void DrawVisited(vector<Point> boxes);
+  void DrawVisited(list<Point> boxes);
   void DrawStart();
   void setColor(Color c);
   void ConstructImage(vector<vector<uint8_t>> v);
