@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
   SDL_Window* win = NULL;
   SDL_Event e;
   SDL_Renderer *renderer;
-  SDL_Surface *surface;
+
 
   bool quit = false;
   
@@ -88,18 +88,6 @@ int main(int argc, char* argv[])
 
 
   
-
-  // Prepare graphics
-
-  // 
-  SDL_Rect rect;
-  rect.x = 0;
-  rect.y = 0;
-  rect.h = 50;
-  rect.w = 50;
-
-
-
 
   //  SDL_RenderCopy (renderer, texture, NULL , NULL);
   SDL_RenderPresent(renderer);

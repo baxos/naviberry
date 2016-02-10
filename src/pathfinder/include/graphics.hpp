@@ -16,8 +16,10 @@ struct Point
 
   Point operator=(const Point& other)
   {
-    this->x = other.x;
-    this->y = other.y;
+    Point res;
+    res.x = this->x + other.x;
+    res.y = this->y + other.y;
+    return res;
   }
 
   bool operator==(const Point& p1)

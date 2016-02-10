@@ -6,7 +6,7 @@
 
 
 
-#define BOX_SIZE 3;
+#define BOX_SIZE 6;
 
 using namespace std;
 

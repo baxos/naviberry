@@ -111,8 +111,7 @@ vector<GraphNode> AStar::getNeighbours(GraphNode* node)
       // get upper
       newPt.y -= 1;
       if (newPt.y >= 0)
-	{
-	  GraphNode g = graph[newPt.x][newPt.y];
+	{	  
 	  result.push_back(graph[newPt.x][newPt.y]);
 	}
       
@@ -358,7 +357,7 @@ void AStar::PrintOpen()
   cout << "=========== Dumpimg list ============ " << endl;
   for (auto v : open)
     {
-      //      printf("[%d] : [x, y] \t [ %d , %d ] \n", counter, v.x, v.y);
+      printf("[%d] : [x, y] \t [ %d , %d ] \n", counter, v.x, v.y);
       counter++;
     }
 }
@@ -427,15 +426,16 @@ list<Point> AStar::getGoalRoute()
     {
       return goalRoute;
     }
+  else
+    {
+      throw ;
+    }
 }
 
 void AStar::ConstructGoalRoute(GraphNode* goalNode)
 {
   vector<Point> route;
   GraphNode* currentNode = goalNode;
-  Point endPt;
-  endPt.x = -10;
-  endPt.y = -10;
 
   cout << "Constructing goal route, by reversing route" << endl;
   printf("============================================== \n");

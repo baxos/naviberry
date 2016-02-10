@@ -32,7 +32,7 @@ void Map::GenerateMazeMap()
 
       auto doorOpen = std::rand() % (xsize-1);
       auto doorOpenTwo = std::rand() % (xsize-1);
-      auto randNumber = std::rand() % (xsize-1);
+      
       if (i % 2 == 0)
 	{
 	  for (auto j=0; j < xsize; j++)

@@ -5,7 +5,7 @@ outputname = pathfinder
 # the object files used
 objects = pathfinder.o graphics.o astar.o mapping.o node.o
 # compile flags
-CFLAGS = -lSDL2 -std=c++11 -pthread -O0 -ggdb # -Werror -Wall
+CFLAGS = -lSDL2 -std=c++11 -pthread -O0 -ggdb -Werror -Wall
 
 
 Pathfinder: $(objects)
