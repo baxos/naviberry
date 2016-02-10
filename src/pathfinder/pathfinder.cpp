@@ -26,6 +26,9 @@
 #define GAME_X 100
 #define GAME_Y 100
 
+
+bool verboseView = false;
+
 using namespace std;
 
 
@@ -96,8 +99,18 @@ int main(int argc, char* argv[])
 
   //  astar.Start();
   
-  
 
+  // Start timer
+  auto timer_done = false;
+  auto time_elapsed = std::chrono::system_clock::now();
+  astar.Start();
+  auto time_stop = std::chrono::system_clock::now();
+  std::chrono::duration<double> diff = time_stop - time_elapsed;
+  cout << "[Time spent] : " << diff.count() << " secs.." << endl;
+
+
+  string test;
+  cin >> test;
 
   // start main loop
   while (quit != true)
@@ -119,7 +132,15 @@ int main(int argc, char* argv[])
       // if we have goal route
       if (astar.isGoalReached())
 	{
+	  if (timer_done == false)
+	    {
+	  	  auto time_stopped = std::chrono::system_clock::now();
+	  	  std::chrono::duration<double> diff = time_stopped - time_elapsed;
+	  	  cout << "[Time spent] : " << diff.count() << " .. " << endl;
+		  timer_done = true;
+	    }
 	  g.DrawVisited(astar.getGoalRoute(), Color::DarkGreen);
+
 	}
       else
 	{
@@ -131,7 +152,7 @@ int main(int argc, char* argv[])
 
 
 
-      //      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      //      std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
       // sleep?
 

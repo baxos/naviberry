@@ -58,12 +58,16 @@ void GraphNode::setPosition(int x, int y)
   p.x = x;
   p.y = y;
 
+  // whats up here??
   this->pos = p;
 }
 
 void GraphNode::setParent(Point _par)
 {
-  this->parent = _par;
+  Point pt = _par;
+  this->parent.x = pt.x;
+  this->parent.y = pt.y;
+  //  this->parent = _par;
 }
 
 Point GraphNode::getPosition()

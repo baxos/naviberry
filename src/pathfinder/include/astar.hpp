@@ -38,7 +38,7 @@ class AStar
   void PrintClosed();
 public:
   int ManhattenCost(Point target, Point start);
-  vector<GraphNode> getNeighbours(GraphNode* node);
+  list<Point> getNeighbours(Point pt);
   AStar(vector <vector<uint8_t> > map, int maxX, int maxY, Point* _target, Point* _start);
   int getTotalGraphCount();
   void Start();
