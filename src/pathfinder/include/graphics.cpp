@@ -6,7 +6,7 @@
 
 
 
-#define BOX_SIZE 20;
+#define BOX_SIZE 3;
 
 using namespace std;
 
@@ -63,14 +63,18 @@ void Graphics::setColor(Color c)
       g = 123;
       b = 0;
       break;
+    case Color::Gray:
+      r = 133;
+      g = 133;
+      b = 133;
     }
 
   SDL_SetRenderDrawColor(renderer, r, g, b, 255);
 }
 
-void Graphics::DrawVisited(list<Point> boxes)
+void Graphics::DrawVisited(list<Point> boxes, Color c)
 {
-  this->setColor(Color::DarkGreen);
+  this->setColor(c);
 
   for (auto p : boxes)
     {

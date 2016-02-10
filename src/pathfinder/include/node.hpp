@@ -16,6 +16,7 @@ private:
   Point pos;
   int g,h,f;
   void UpdateCost();
+  bool canWalk;
 public:
   Point parent;
   GraphNode();
@@ -25,9 +26,9 @@ public:
   void setH(int val);
   void setG(int val);
   void setF(int val);
-  void setPixel(Pixel _p);
   void setPosition(int x, int y);
-  Pixel getPixel();
+  void setWalkable(bool _val);
+  bool isWalkable();
   Point getPosition();
   
 

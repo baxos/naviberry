@@ -39,9 +39,7 @@ struct Point
   
 };
 
-const Point END_PT = { -10, -10};
-
-
+const Point END_PT = { -999, -999 };
 
 struct Pixel
 {
@@ -50,7 +48,7 @@ struct Pixel
   uint8_t B;
 };
 
-enum class  Color { Black, Red, Green, DarkGreen,  White, Blue };
+enum class  Color { Black, Red, Green, DarkGreen,  White, Blue, Gray,  };
 
 class Graphics
 {
@@ -66,7 +64,7 @@ public:
   void setStart(int x, int y);
   void DrawGrid();
   void DrawTarget();
-  void DrawVisited(list<Point> boxes);
+  void DrawVisited(list<Point> boxes, Color c);
   void DrawStart();
   void setColor(Color c);
   void ConstructImage(vector<vector<uint8_t>> v);

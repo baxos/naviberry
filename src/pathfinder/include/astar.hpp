@@ -9,8 +9,8 @@
 #include "./graphics.hpp"
 #include "./node.hpp"
 
-#define GRAPH_X_MAX 50
-#define GRAPH_Y_MAX 50
+#define GRAPH_X_MAX 250
+#define GRAPH_Y_MAX 250
 
 
 class AStar
@@ -20,9 +20,8 @@ class AStar
   list<Point> open;
   list<Point> closed;
   list<Point> goalRoute;
-  vector<GraphNode> checked;
-  vector<Point> openPoints;
-  vector<Point> checkedBoxes;
+  list<Point> checkedPoints;
+
 
   bool goalReached, cantReach;
   bool isReady, isError;
@@ -43,7 +42,8 @@ public:
   AStar(vector <vector<uint8_t> > map, int maxX, int maxY, Point* _target, Point* _start);
   int getTotalGraphCount();
   void Start();
-  vector<Point> getCheckedBoxes();
+  void Step();
+  list<Point> getCheckedBoxes();
   list<Point> getGoalRoute();
   bool isGoalReached();
 };

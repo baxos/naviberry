@@ -23,8 +23,8 @@
 #define SCREEN_HEIGHT 1100
 #define SCREEN_WIDTH 1200
 
-#define GAME_X 50
-#define GAME_Y 50
+#define GAME_X 100
+#define GAME_Y 100
 
 using namespace std;
 
@@ -60,22 +60,19 @@ int main(int argc, char* argv[])
   Map m(GAME_X, GAME_Y);
 
   m.GenerateEmptyMap();
-  for (auto i=0; i < 7; i++)
-    {
-      m.setTile(i, 3, 1);
-    }
 
+  m.GenerateMazeMap();
 
 
   // Make target
   Point target;
-  target.x = 48;
-  target.y = 48;
+  target.x = 35;
+  target.y = 35;
 
   // Make start point
   Point start;
-  start.x = 2;
-  start.y = 2;
+  start.x = 1;
+  start.y = 1;
 
   AStar astar(m.getMap(), GAME_X, GAME_Y, &target, &start);
 
@@ -109,7 +106,7 @@ int main(int argc, char* argv[])
 
 
 
-  astar.Start();
+  //  astar.Start();
   
   
 
@@ -122,15 +119,32 @@ int main(int argc, char* argv[])
       g.DrawTarget();
       g.DrawStart();
       g.DrawGrid();
+    
       
+      auto cboxes = astar.getCheckedBoxes();
+      if (cboxes.size() > 0)
+	{
+	  g.DrawVisited(cboxes, Color::Gray);
+	}
+      
+  
       // if we have goal route
       if (astar.isGoalReached())
 	{
-	  g.DrawVisited(astar.getGoalRoute());
+	  g.DrawVisited(astar.getGoalRoute(), Color::DarkGreen);
 	}
-
+      else
+	{
+	  astar.Step();
+	}
       
+
       SDL_RenderPresent(renderer);
+
+
+
+      //      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
       // sleep?
 
       while (SDL_PollEvent(&e))

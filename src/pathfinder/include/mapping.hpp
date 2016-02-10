@@ -17,6 +17,7 @@ public:
   vector< vector<uint8_t> > getMap();
   void setTile(int x, int y, uint8_t val);
   void GenerateEmptyMap();
+  void  GenerateMazeMap();
   Map(int x, int y);
 };
 

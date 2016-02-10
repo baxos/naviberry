@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <thread>
 #include <chrono>
-
+#include <climits>
 #include "./astar.hpp"
 
 #define SLEEP_DURATION 1 // 1000 ms / 1 sec
@@ -34,8 +34,17 @@ AStar::AStar(vector< vector<uint8_t> > map, int maxX, int maxY, Point* _target, 
 	  currentPt.x = x;
 	  currentPt.y = y;
 	  graph[x][y].setPosition(x, y);
-	  graph[x][y].setH(this->ManhattenCost(targetPt, currentPt));
 	  
+	  if (*jt == 1)
+	    {
+	      // this unit is blocked
+	      graph[x][y].setWalkable(false);
+	      graph[x][y].setH(99999);
+	    }
+	  else
+	    {
+	      graph[x][y].setH(this->ManhattenCost(targetPt, currentPt));
+	    }
 	      x++;
 	    }
 
@@ -144,6 +153,100 @@ int AStar::getTotalGraphCount()
 }
 
 
+void AStar::Step()
+{
+  // Check whether we are started or we have erache goal
+  if (open.size () == 0 && goalReached == false)
+    {
+      // Initialize
+      auto currentNode = graph[startPt.x][startPt.x];
+      currentNode.setG(0);
+      currentNode.setH(0);
+      open.push_back(currentNode.getPosition());
+    }
+  else
+    {
+      auto currPt = FindLowestNode();
+      auto currentNode = graph[currPt.x][currPt.y];
+
+      printf("[CURRENT_NODE] [X,Y] { %d , %d } | Cost = %d \n", currentNode.getPosition().x, currentNode.getPosition().y, currentNode.getCost());
+
+
+      // Let 
+      checkedPoints.push_back(currentNode.getPosition());
+      
+
+
+      // Add to closed list
+      //cout << "Adding current node to closed list" << endl;
+      closed.push_back(currentNode.getPosition());
+
+
+      // Check if this is the goal node
+      // cout << "Checking whether this node is goal node or not" << endl;
+      if (currentNode.getPosition().x == targetPt.x && currentNode.getPosition().y == targetPt.y)
+	{
+	  // Goal reached
+	  cout << "Goal node reached.." << endl;
+	  printf("Parent node : { %d , %d } \n", currentNode.parent.x,
+		 currentNode.parent.y
+		 );
+	  // Construct goal 
+	  ConstructGoalRoute(&currentNode);
+
+ 
+	}
+
+
+      
+      // get neighbours
+      // cout << "Finding neighbour nodes to this one" << endl;
+      auto vneigh = this->getNeighbours(&currentNode);
+
+      //cout << "Analyzing neighbour nodes" << endl;
+      for (auto &v : vneigh)
+	{
+
+	  // If its blocked or already in closed list, skip it
+	  if (ClosedContains(v.getPosition()))
+	    continue;
+
+	  // calculate path cost
+	  auto pathcost = currentNode.getCost() + 10;
+	  // If new cost is lower than current, update to this path
+	  // Or if the box hasn't been checked yet, update to this path
+	  if (pathcost < v.getCost() || OpenContains(v.getPosition()) == false)
+	    {
+	      Point currPt;
+	      currPt = v.getPosition();
+
+	      graph[currPt.x][currPt.y].setG(pathcost);
+
+	      
+	      graph[currPt.x][currPt.y].setParent(currentNode.getPosition());
+	      printf("Node [%d ,%d] parent = { %d, %d} \n",
+		     v.getPosition().x,
+		     v.getPosition().y,
+		     graph[v.getPosition().x][v.getPosition().y].parent.x,
+		     graph[v.getPosition().x][v.getPosition().y].parent.y
+		     );
+
+
+	      // Add to open, if not already there
+	      if (OpenContains(v.getPosition()) == false)
+		{
+		  open.push_back(v.getPosition());
+		}
+	    }
+	  
+	}
+
+      // repeat
+
+
+    }
+}
+
 void AStar::Start()
 {
   // get starting node
@@ -164,9 +267,6 @@ void AStar::Start()
       //      this->PrintOpen();
 
 
-      // Sleep for human viewabillity??
-      std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_DURATION));
-
 
       // Take lowest cost node in the open list
       // cout << "Finding lowest node in open list" << endl;
@@ -174,7 +274,9 @@ void AStar::Start()
       currentNode = graph[currPt.x][currPt.y];
       printf("[CURRENT_NODE] [X,Y] { %d , %d } | Cost = %d \n", currentNode.getPosition().x, currentNode.getPosition().y, currentNode.getCost());
 
-      // Remove from open list
+
+      // Let 
+      checkedPoints.push_back(currentNode.getPosition());
       
 
 
@@ -288,7 +390,7 @@ bool AStar::ClosedContains(Point g)
 Point AStar::FindLowestNode()
 {
   // Scan through all elements
-  int lowest = 9999;
+  int lowest = INT_MAX-1;
   Point result;
 
 
@@ -368,14 +470,9 @@ bool AStar::isGoalReached()
   return goalReached;
 }
 
-vector<Point> AStar::getCheckedBoxes()
+list<Point> AStar::getCheckedBoxes()
 {
-  if (checkedBoxes.size() > 1)
-    {
-      std::cout << "Returning " << checkedBoxes.size() << " boxes" << std::endl;
-
-    }
-  return checkedBoxes;
+  return checkedPoints;
 }
 
 

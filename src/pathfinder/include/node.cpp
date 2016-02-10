@@ -7,8 +7,19 @@ GraphNode::GraphNode()
   this->g = 0;
 
   this->parent = END_PT;
+
+  this->canWalk = true;
 }
 
+bool GraphNode::isWalkable()
+{
+  return this->canWalk;
+}
+
+void GraphNode::setWalkable(bool _val)
+{
+  this->canWalk = _val;
+}
 
 void GraphNode::setH(int val)
 {
