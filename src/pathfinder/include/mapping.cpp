@@ -10,15 +10,20 @@ using namespace std;
 
 void Map::GenerateEmptyMap()
 {
+  map.resize(ysize);
+  for (auto& m : map)
+  {
+  	m.resize(xsize);
+  }
   for (auto i = 0; i < ysize; i++)
     {
-      vector<uint8_t> v;
+      vector<uint8_t> v(xsize)
       for (auto j = 0; j < xsize; j++)
 	{
-	  v.push_back(0);
+	  v[j] = 0;
 	}
 
-      map.push_back(v);
+      map[i] = v;
     }
 }
 
