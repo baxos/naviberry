@@ -8,23 +8,29 @@
 
 using namespace std;
 
+extern bool verboseView;
+
 void Map::GenerateEmptyMap()
 {
-  for (auto i = 0; i < ysize; i++)
-    {
-      vector<uint8_t> v;
-      for (auto j = 0; j < xsize; j++)
-	{
-	  v.push_back(0);
-	}
+  vector<uint8_t> v (xsize);
 
-      map.push_back(v);
-    }
+  // GEnerate an empty row of 0's mathing the X length
+  std::fill(v.begin(), v.end(), 0);
+
+
+  for (auto i = 0; i < ysize; i++)
+  {
+    map.push_back(v);
+  }
+
 }
 
 void Map::GenerateMazeMap()
 {
+  printf("[debug] generating %d x %d maze \n", xsize, ysize);
   std::srand(std::time(0));
+
+
   for (auto i = 0; i < ysize; i++)
     {
       // |
@@ -52,24 +58,8 @@ void Map::GenerateMazeMap()
 
 void Map::setTile(int x, int y, uint8_t val)
 {
-  int cx,cy;
-  cx=0;
-  cy=0;
-  for (auto it = map.begin(); it != map.end(); it++)
-    {
-      for (auto jt = it->begin(); jt != it->end(); jt++)
-	{
-	  if (cy == y && cx == x)
-	    {
-	      *jt = val;
-	      break;
-	    }
-	  cx++;
-	}
 
-      cy++;
-      cx = 0;
-    }
+  map[y][x] = val;
 }
 
 vector< vector<uint8_t> > Map::getMap()
@@ -81,6 +71,17 @@ Map::Map(int x, int y)
 {
   ysize = y;
   xsize = x;
+  map.resize(y);
+  
+  if (verboseView)
+    {
+      printf("Resizing map vector to %d x %d \n", x, y);
+    }
+
+  for ( auto& m : map)
+    {
+      m.resize(x);
+    }
 }
 
 

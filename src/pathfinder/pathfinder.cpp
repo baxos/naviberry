@@ -1,6 +1,6 @@
 /* 
    Author      : Jan Emil Bacher
-   Name        : navicon.cpp
+   Name        : naviberry pathfinder module
    Description : Linux client application written for "Naviberry Project". 
 */
 #include <iostream>
@@ -18,12 +18,14 @@
 #include "./include/mapping.hpp"
 #include "./include/astar.hpp"
 #include "./include/node.hpp"
+#include "./include/navi-utils.hpp"
+
 
 
 #define SCREEN_HEIGHT 1100
 #define SCREEN_WIDTH 1200
 
-#define GAME_X 100
+#define GAME_X 200
 #define GAME_Y 100
 
 
@@ -38,9 +40,9 @@ int main(int argc, char* argv[])
   SDL_Window* win = NULL;
   SDL_Event e;
   SDL_Renderer *renderer;
-
-
   bool quit = false;
+
+
   
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
@@ -60,13 +62,25 @@ int main(int argc, char* argv[])
 
 
   Graphics g(renderer);
+
+  // Time the map creation
+  Naviberry::StopWatch sw;
+
+
+  sw.Start();
+  
+
   Map m(GAME_X, GAME_Y);
 
   m.GenerateEmptyMap();
 
   m.GenerateMazeMap();
 
+  
+  sw.Stop();
+  printf("[verbose] Time creation of the map %d miliseconds \n", sw.getTimeElapsed());
 
+  
   // Make target
   Point target;
   target.x = 35;
@@ -77,7 +91,8 @@ int main(int argc, char* argv[])
   start.x = 1;
   start.y = 1;
 
-  AStar astar(m.getMap(), GAME_X, GAME_Y, &target, &start);
+  auto currentMap = m.getMap();
+  AStar astar(&currentMap, GAME_X, GAME_Y, &target, &start);
 
 
   g.ConstructImage(m.getMap());
@@ -97,18 +112,6 @@ int main(int argc, char* argv[])
 
 
 
-  //  astar.Start();
-  
-
-  // Start timer
-  auto timer_done = false;
-  auto time_elapsed = std::chrono::system_clock::now();
-  astar.Start();
-  auto time_stop = std::chrono::system_clock::now();
-  std::chrono::duration<double> diff = time_stop - time_elapsed;
-  cout << "[Time spent] : " << diff.count() << " secs.." << endl;
-
-
   // start main loop
   while (quit != true)
     {
@@ -117,34 +120,26 @@ int main(int argc, char* argv[])
       g.DrawTarget();
       g.DrawStart();
       g.DrawGrid();
-    
+      
       
       auto cboxes = astar.getCheckedBoxes();
-      if (cboxes.size() > 0)
+      if(cboxes.size() > 0)
 	{
 	  g.DrawVisited(cboxes, Color::Gray);
 	}
       
-  
+      
       // if we have goal route
       if (astar.isGoalReached())
 	{
-	  if (timer_done == false)
-	    {
-	  	  auto time_stopped = std::chrono::system_clock::now();
-	  	  std::chrono::duration<double> diff = time_stopped - time_elapsed;
-	  	  cout << "[Time spent] : " << diff.count() << " .. " << endl;
-		  timer_done = true;
-	    }
 	  g.DrawVisited(astar.getGoalRoute(), Color::DarkGreen);
-
 	}
-      else
-	{
-	  astar.Step();
-	}
+      else 
+      {
+	astar.Step();
+      }
       
-
+      
       SDL_RenderPresent(renderer);
 
 
@@ -163,7 +158,7 @@ int main(int argc, char* argv[])
     }
   
 
-
+  
   
   SDL_DestroyWindow(win);
   SDL_Quit();

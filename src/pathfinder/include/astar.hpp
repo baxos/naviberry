@@ -39,7 +39,7 @@ class AStar
 public:
   int ManhattenCost(Point target, Point start);
   list<Point> getNeighbours(Point pt);
-  AStar(vector <vector<uint8_t> > map, int maxX, int maxY, Point* _target, Point* _start);
+  AStar(vector <vector<uint8_t> > *map, int maxX, int maxY, Point* _target, Point* _start);
   int getTotalGraphCount();
   void Start();
   void Step();

@@ -10,7 +10,7 @@
 
 extern bool verboseView;
 
-AStar::AStar(vector< vector<uint8_t> > map, int maxX, int maxY, Point* _target, Point* _start)
+AStar::AStar(vector< vector<uint8_t> > *map, int maxX, int maxY, Point* _target, Point* _start)
 {
   // Initialize graph
   int x,y;
@@ -35,7 +35,7 @@ AStar::AStar(vector< vector<uint8_t> > map, int maxX, int maxY, Point* _target, 
   printf("Target pt : { %d , %d } \n", targetPt.x, targetPt.y);
 
 
-  for (auto it = map.begin(); it != map.end(); it++)
+  for (auto it = map->begin(); it != map->end(); it++)
     {
       for (auto jt = it->begin(); jt != it->end(); jt++)
 	{
@@ -53,7 +53,7 @@ AStar::AStar(vector< vector<uint8_t> > map, int maxX, int maxY, Point* _target, 
 	  else
 	    {
 	      graph[x][y].setH(this->ManhattenCost(targetPt, currentPt));
-	      graph[x][y].setWalkable(true);
+              graph[x][y].setWalkable(true);
 	    }
 	      x++;
 	    }
@@ -183,8 +183,9 @@ void AStar::Step()
       auto currentNode = graph[currPt.x][currPt.y];
 
       if (verboseView)
-	printf("[CURRENT_NODE] [X,Y] { %d , %d } | Cost = %d \n", currentNode.getPosition().x, currentNode.getPosition().y, currentNode.getCost());
-
+	{
+	  printf("[CURRENT_NODE] [X,Y] { %d , %d } | Cost = %d \n", currentNode.getPosition().x, currentNode.getPosition().y, currentNode.getCost());
+	}
 
       // Let 
       checkedPoints.push_back(currentNode.getPosition());

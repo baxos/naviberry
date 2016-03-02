@@ -3,7 +3,7 @@
 # Name of binary executable 
 outputname = pathfinder
 # the object files used
-objects = pathfinder.o graphics.o astar.o mapping.o node.o
+objects = pathfinder.o graphics.o astar.o mapping.o node.o navi-utils.o
 # compile flags
 CFLAGS = -lSDL2 -std=c++11 -pthread -O0 -ggdb -Werror -Wall
 
@@ -21,6 +21,9 @@ mapping.o:	./include/mapping.cpp ./include/mapping.hpp
 	g++ -c ./include/mapping.cpp $(CFLAGS)
 node.o:		./include/node.cpp ./include/node.hpp
 	g++ -c ./include/node.cpp $(CFLAGS)
+navi-utils.o:	./include/navi-utils.cpp ./include/navi-utils.hpp
+	g++ -c ./include/navi-utils.cpp $(CFLAGS)
+
 .PHONY : clean
 clean : 
 	$(warning Cleaning object files [ $(objects) ] )
