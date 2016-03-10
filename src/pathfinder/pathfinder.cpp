@@ -36,33 +36,6 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-  // Sdl
-  SDL_Window* win = NULL;
-  SDL_Event e;
-  SDL_Renderer *renderer;
-  bool quit = false;
-
-
-  
-  if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
-    {
-      return EXIT_FAILURE;
-    }
-  
-  
-  
-  // If user asked for window, create it
-  win = SDL_CreateWindow("Naviberry pathfinder", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-  if (win == nullptr)
-    return EXIT_FAILURE;
-
-  renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
-  if (renderer == nullptr)
-    return EXIT_FAILURE;
-
-
-  Graphics g(renderer);
-
   // Time the map creation
   Naviberry::StopWatch sw;
 
@@ -95,73 +68,16 @@ int main(int argc, char* argv[])
   AStar astar(&currentMap, GAME_X, GAME_Y, &target, &start);
 
 
-  g.ConstructImage(m.getMap());
 
+  sw.Start();
+  astar.Start();
 
+  printf("what's going on? \n");
 
-  g.setTarget(target.x, target.y);
-  g.setStart(start.x, start.y);
+  sw.Stop();
 
+  printf("[verbose] completed route in %d ms \n", sw.getTimeElapsed());
 
-
-
-  
-
-  //  SDL_RenderCopy (renderer, texture, NULL , NULL);
-  SDL_RenderPresent(renderer);
-
-
-
-  // start main loop
-  while (quit != true)
-    {
-      
-      g.ClearImage();
-      g.DrawTarget();
-      g.DrawStart();
-      g.DrawGrid();
-      
-      
-      auto cboxes = astar.getCheckedBoxes();
-      if(cboxes.size() > 0)
-	{
-	  g.DrawVisited(cboxes, Color::Gray);
-	}
-      
-      
-      // if we have goal route
-      if (astar.isGoalReached())
-	{
-	  g.DrawVisited(astar.getGoalRoute(), Color::DarkGreen);
-	}
-      else 
-      {
-	astar.Step();
-      }
-      
-      
-      SDL_RenderPresent(renderer);
-
-
-
-      //      std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-      // sleep?
-
-      while (SDL_PollEvent(&e))
-	{
-	  if (e.type == SDL_QUIT)
-	    {
-	      quit = true;
-	    }
-	}
-    }
-  
-
-  
-  
-  SDL_DestroyWindow(win);
-  SDL_Quit();
  
 
   // just exit

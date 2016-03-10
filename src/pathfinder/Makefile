@@ -3,7 +3,7 @@
 # Name of binary executable 
 outputname = pathfinder
 # the object files used
-objects = pathfinder.o graphics.o astar.o mapping.o node.o navi-utils.o
+objects = pathfinder.o graphics.o astar.o mapping.o node.o navi-utils.o 
 # compile flags
 CFLAGS = -lSDL2 -std=c++11 -pthread -O0 -ggdb -Werror -Wall
 
@@ -12,7 +12,7 @@ Pathfinder: $(objects)
 	g++ -o $(outputname) $(objects) $(CFLAGS) 
 	@echo Binary executable : $(outputname)
 pathfinder.o:	./pathfinder.cpp
-	g++ -c ./pathfinder.cpp  $(CFLAGS)
+	g++ -c ./pathfinder.cpp $(CFLAGS)
 graphics.o:	./include/graphics.cpp ./include/graphics.hpp
 	g++ -c ./include/graphics.cpp $(CFLAGS)
 astar.o:	./include/astar.cpp ./include/astar.hpp

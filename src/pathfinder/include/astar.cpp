@@ -310,6 +310,8 @@ void AStar::Start()
 	  // Construct goal 
 	  ConstructGoalRoute(&currentNode);
 
+	  // jump out of loop
+	  break;
  
 	}
 

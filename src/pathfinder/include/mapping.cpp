@@ -12,7 +12,6 @@ extern bool verboseView;
 
 void Map::GenerateEmptyMap()
 {
-<<<<<<< HEAD
   vector<uint8_t> v (xsize);
 
   // GEnerate an empty row of 0's mathing the X length
@@ -24,7 +23,6 @@ void Map::GenerateEmptyMap()
     map.push_back(v);
   }
 
-=======
   map.resize(ysize);
   for (auto& m : map)
   {
@@ -32,7 +30,7 @@ void Map::GenerateEmptyMap()
   }
   for (auto i = 0; i < ysize; i++)
     {
-      vector<uint8_t> v(xsize)
+      vector<uint8_t> v(xsize);
       for (auto j = 0; j < xsize; j++)
 	{
 	  v[j] = 0;
@@ -40,7 +38,7 @@ void Map::GenerateEmptyMap()
 
       map[i] = v;
     }
->>>>>>> 33a60b6fd34b2c0ee4b8b3656645cf26e2ca863d
+
 }
 
 void Map::GenerateMazeMap()
