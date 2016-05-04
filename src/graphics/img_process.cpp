@@ -174,6 +174,44 @@ bool Bitmap::UsesPadding()
     }
 }
 
+void Bitmap::SaveTo(std::string filename)
+{
+  bool can_save = true;
+  struct stat fst;
+
+  // check whether file exists already
+  if ( stat(filename.c_str(), &fst) != 0)
+    {
+      // no file
+    }
+  else
+    {
+      // file already exists, no save nless its forced
+      can_save = false;
+    }
+
+
+  if (can_save)
+    {
+      FILE* fp;
+      fp = fopen(filename.c_str(), "r+");
+
+      // start by writing header
+      fwrite(&this->header, 1, sizeof(struct BITMAP_HEADER), fp);
+
+      // then information header
+      fwrite(&this->infoheader, 1, sizeof(struct BITMAP_STD_INFO_HEADER_NEW), fp);
+
+      // finally pixel table
+      fwrite(&this->pixel_data, 1, total_pixel_memory, fp);
+
+      // close
+      fclose(fp);
+    }
+
+
+}
+
 void Bitmap::Load2(std::string filename)
 {
   // Get file size of the image
@@ -317,6 +355,10 @@ void Bitmap::Load2(std::string filename)
       printf("[+] Image dimensions : %d x %d \n", height, width);
       printf("[+] Resolution       : %d bytes \n[+] Padbytes         : %d byte(s)\n", resolution, padbytes);
       printf("[+] Bytes per pixel  : %d byte(s). \n", bytes_per_pixel);
+
+
+      header = bmp_header;
+      infoheader = bmp_infoheader;
 
       delete buffer; 
     }

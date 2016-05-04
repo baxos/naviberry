@@ -112,11 +112,14 @@ namespace naviberry
     uint8_t* pixel_data;
     void RemovePadBytes();
     bool UsesPadding();
+    struct BITMAP_HEADER header;
+    struct BITMAP_STD_INFO_HEADER_NEW infoheader;
+
   public:
     static Bitmap CreateNew(int width, int height);
     int32_t CalculateRowSize(int32_t bpi, int32_t width);
-    void Load(std::string filename);
     void Load2(std::string filename);
+    void SaveTo(std::string filename);
     void Flip();
     int32_t getWidth();
     int32_t getHeight();

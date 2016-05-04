@@ -21,6 +21,7 @@ int main(int argc, char** argv)
 
       // load image nd flip it
       bmp.Load2(filename);
+      bmp.SaveTo("tester123.bmp");
       bmp.Flip();
 
 
