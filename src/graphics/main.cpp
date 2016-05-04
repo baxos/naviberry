@@ -2,6 +2,11 @@
 #include <SDL2/SDL.h>
 #include <iostream>
 #include <string>
+#include <cassert>
+
+
+// For release, un-comment the define below
+// #define NDEBUG
 
 void print_usage();
 
@@ -38,30 +43,23 @@ int main(int argc, char** argv)
       std::cout << "[+] sdl_init_video" << std::endl;
 
       // init sdl 
-      if ( SDL_Init(SDL_INIT_VIDEO) < 0)
-	{
-	  exit(-1);
-	}
-      
+      auto rc = SDL_Init(SDL_INIT_VIDEO);
+
+      assert ( rc >= 0);
+           
       std::cout << "[+] sdl createwindow and renderer" << std::endl;
       SDL_CreateWindowAndRenderer( bmp.getWidth() , bmp.getHeight(), 0, &window, &renderer);
 
-      if (window == NULL)
-	{
-	  exit(1);
-	}
-      else if ( renderer == NULL)
-	{
-	  exit(1);
-	}
+      assert ( window != nullptr);
+      assert ( renderer != nullptr);
+
 
       std::cout << "[+] sdl_createtexture" << std::endl;
       texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STATIC, bmp.getWidth(), bmp.getHeight());
+
+      assert( texture != nullptr);
       
-      if (texture == NULL)
-	{
-	  exit(1);
-	}
+
 
       std::cout << "[+] updatetexture" << std::endl;
       SDL_UpdateTexture(texture, NULL, bmp.getPixelTable(),bmp.getBytesPerPixel() * bmp.getPitch());
