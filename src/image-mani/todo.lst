@@ -1,5 +1,0 @@
-* Add support for BITMAPINFOHEADER, it should be easy when V4 is already supported
--> Link from MS "BitmapInfoHeader file format documentation" : http://msdn.microsoft.com/en-us/library/windows/desktop/dd183376%28v=vs.85%29.aspx
-
-* Create library for handling the headers instead of having in the main code
--> Should be mostly copy/paste, but do it nicely please!
