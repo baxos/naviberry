@@ -119,7 +119,7 @@ namespace naviberry
     static Bitmap CreateNew(int width, int height);
     int32_t CalculateRowSize(int32_t bpi, int32_t width);
     void Load2(std::string filename);
-    void SaveTo(std::string filename);
+    bool SaveTo(std::string filename);
     void Flip();
     int32_t getWidth();
     int32_t getHeight();

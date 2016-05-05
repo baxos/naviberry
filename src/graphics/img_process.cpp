@@ -1,6 +1,7 @@
 #include "img_process.hpp"
 
 #include <iostream>
+#include <cassert>
 #include <vector>
 #include <stack>
 #include <sys/types.h>
@@ -174,9 +175,12 @@ bool Bitmap::UsesPadding()
     }
 }
 
-void Bitmap::SaveTo(std::string filename)
+bool Bitmap::SaveTo(std::string filename)
 {
-  bool can_save = true;
+  bool permission_flag = true;
+  bool fileOK_flag = true;
+  bool verified_flag = false;
+  size_t expected_filesize = 0;
   struct stat fst;
 
   // check whether file exists already
@@ -187,29 +191,105 @@ void Bitmap::SaveTo(std::string filename)
   else
     {
       // file already exists, no save nless its forced
-      can_save = false;
+      printf("\t[-] File already exist. Please use force save or choose other filename. \n");
+      fileOK_flag = false;
     }
 
 
-  if (can_save)
+  if ( (fileOK_flag == true) && (permission_flag == true))
     {
       FILE* fp;
-      fp = fopen(filename.c_str(), "r+");
+      fp = fopen(filename.c_str(), "wb");
+
+      // calculate expected file size
+      expected_filesize += sizeof(struct BITMAP_HEADER);
+      expected_filesize += sizeof(struct BITMAP_STD_INFO_HEADER_NEW);
+      expected_filesize += total_pixel_memory;
+
+
 
       // start by writing header
-      fwrite(&this->header, 1, sizeof(struct BITMAP_HEADER), fp);
+      printf("\t[+] Writing header to file. \n");
+      auto n = fwrite(&this->header, 1, sizeof(struct BITMAP_HEADER), fp);
+      assert(n == sizeof(struct BITMAP_HEADER));
 
-      // then information header
-      fwrite(&this->infoheader, 1, sizeof(struct BITMAP_STD_INFO_HEADER_NEW), fp);
 
+      // then information header..
+      printf("\t[+] Writing information header to file. \n");
+      n = fwrite(&this->infoheader, 1, sizeof(struct BITMAP_STD_INFO_HEADER_NEW), fp);
+      assert( n == sizeof(struct BITMAP_STD_INFO_HEADER_NEW));
+       
+	     
       // finally pixel table
-      fwrite(&this->pixel_data, 1, total_pixel_memory, fp);
+      // bug in code, it wont write all the bytes in one call
+      printf("\t[+] Writing the pixel table, total amount of bytes : %d \n", total_pixel_memory);
+      auto written_bytes = 0;
+      auto block_size = 1024;
+      while (written_bytes < total_pixel_memory)
+	{       
+	  if (written_bytes + block_size > total_pixel_memory)
+	    {
+	      // calcuate new block size, write nd done..
+	      auto temp = block_size;
+	      block_size = total_pixel_memory - written_bytes;
+	      n = fwrite(&this->pixel_data[written_bytes], 1, block_size, fp);
+	      written_bytes += n;
+	      printf("\t[+] Calculated new block size : %d old was : %d \n", block_size, temp);
+
+	    }
+	  else
+	    {
+	      n = fwrite(&this->pixel_data[written_bytes], 1, block_size, fp);
+	      written_bytes += block_size;
+	    }
+	}
+      assert(written_bytes == total_pixel_memory);
+
 
       // close
       fclose(fp);
+
+
+
+      // check file again..
+      if ( (stat(filename.c_str(), &fst)) != 0)
+	{
+	  // no file, some bad has happened
+	  verified_flag = false;
+	}
+      else
+	{
+	  // file exist, lets check size
+	  auto file_actual_size = fst.st_size;
+	  if (expected_filesize == file_actual_size)
+	    {
+	      verified_flag = true;
+	      printf("\n[+] File is saved and verified. \n");
+	    }
+	  else
+	    {
+	      verified_flag = false;
+	      printf("\t[-] Expected file size and actual file size is different.\n");
+	      printf("\t[-] Expected size : %zu bytes \n", expected_filesize);
+	      printf("\t[-] Actual size   : %zu bytes \n", file_actual_size);
+	    }
+	}
     }
 
 
+
+  if (verified_flag)
+    {
+      // file is correctly saved.
+      return true;
+    }
+  else
+    {
+      // file is corrupted or not saved at all.
+      return false;
+    }
+
+  return false;
 }
 
 void Bitmap::Load2(std::string filename)
