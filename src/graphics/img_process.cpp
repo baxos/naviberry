@@ -55,60 +55,6 @@ void DumpStdHeader(struct BITMAP_STD_INFO_HEADER_NEW *info_header)
 
 using namespace naviberry;
 
-void Bitmap::RemovePadBytes()
-{
-  printf("[+]Entering RemovePadBytes \n");
-  printf("[+]Setting local variables..\n");
-  int pixel_width = width;
-  int pixel_height = height;
-  int curr_res = resolution;
-  int new_res = pixel_width * pixel_height;
-
-  // Allocate memory
-  printf("[+]Allocating memory..\n");
-
-  uint8_t* currBytes = new uint8_t[ sizeof(struct BITMAP_STD_PIXEL) * curr_res];
-  uint8_t* newBytes  = new uint8_t[ sizeof(struct BITMAP_STD_PIXEL) * new_res];
-
-
-  // Error check
-  if (currBytes == nullptr || newBytes == nullptr)
-    {
-      printf("[-]Memory failure..\n");
-      exit(1);
-    }
-  
-  // Copy orignal data
-  printf("[+]Copying data..\n");
-  memcpy(currBytes, pixel_data, curr_res);
-
-  // Iterate through each row
-  // Copy pixel_width data to new array
-  // Skip pad bytes..
-  int h = 0;
-  printf("[+]Entering loop\n");
-  for (; h < pixel_height; h++)
-    {
-      uint32_t oldPos = h * (pixel_width + padbytes);
-      uint32_t newPos = h * (pixel_width);
-      memcpy(&newBytes[newPos],&currBytes[oldPos], sizeof(StdPixel)*pixel_width);
-    }
-
-  // Move data back to orignal place
-  printf("[+]Moving back to orignal location\n");
-
-
-  delete pixel_data;
-  pixel_data = new uint8_t[sizeof(struct BITMAP_STD_PIXEL) * new_res];
-
-  std::memcpy(pixel_data, newBytes, sizeof(struct BITMAP_STD_PIXEL) * new_res);
-
-  resolution = new_res;
-
-  delete currBytes;
-  delete newBytes;
-}
-
 
 int32_t Bitmap::CalculateRowSize(int32_t bpi, int32_t width)
 {
@@ -116,6 +62,25 @@ int32_t Bitmap::CalculateRowSize(int32_t bpi, int32_t width)
   return (int32_t) d;
 }
 
+
+void Bitmap::SwapRGB()
+{
+  uint8_t* test = new uint8_t[this->total_pixel_memory];
+
+  auto line_count = 0;
+  auto offset = 0;
+  auto row_length = (this->width * 3) + this->padbytes;
+
+  while ( line_count != this->height )
+    {
+      std::memcpy(&test[offset], &this->pixel_data[total_pixel_memory - offset], row_length);
+      offset += row_length;
+      line_count++;
+    }
+
+  pixel_data = test;
+
+}
 
 // Flips the bitmaps pixel data
 void Bitmap::Flip()

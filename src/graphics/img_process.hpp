@@ -121,6 +121,7 @@ namespace naviberry
     void Load2(std::string filename);
     bool SaveTo(std::string filename);
     void Flip();
+    void SwapRGB();
     int32_t getWidth();
     int32_t getHeight();
     int32_t getPitch();
