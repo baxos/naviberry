@@ -69,7 +69,7 @@ int main()
       exit(-1);
     }
 
-  // We take care of the signals
+  // We take care of the system signals
   signal(SIGINT, signal_callback_handle);
 
 
@@ -87,9 +87,8 @@ int main()
   // Initialize networking
   Network net("localhost", 1000);
 
-  
-  // Scheduler
-  Scheduler sched;
+
+
   MapHandler mapHandler(50);
   
   
@@ -118,129 +117,121 @@ int main()
 
   while (prog_running)
     {
-      sched.Update();
-
-      if (sched.getNetworkFlag())
-	{      
-	  // Zero set buffer for every run..
-	  buffer = "";
+      // Zero set buffer for every run..
+      buffer = "";
+      
+      // Read from network, to network class buffer
+      net.Read();
+      
+      // Check for packets
+      net.CheckForPackets();
+      
+      // Check for combinations
+      net.CheckForCombinations();
+      
+      if (debugFlag)
+	{
+	  print_msg("Checking textpacket queue");
+	  std::cout << "Queue count : " << net.getTextQueueCount() << std::endl;
+	}
+      
+      if (net.getTextQueueCount() > 0)
+	{
+	  std::list<TextPacket> queue = net.getTextQueue();
 	  
-	  // Read from network, to network class buffer
-	  net.Read();
-
-	  // Check for packets
-	  net.CheckForPackets();
-
-	  // Check for combinations
-	  net.CheckForCombinations();
-
-	  if (debugFlag)
+	  for (auto it = queue.begin(); it!=queue.end(); it++)
 	    {
-	      print_msg("Checking textpacket queue");
-	      std::cout << "Queue count : " << net.getTextQueueCount() << std::endl;
+	      
+	      std::cout << "Packet value : " << it->value << std::endl;
+	      buffer = it->value;
+	      
+	      auto a = buffer.compare("CLIENT_PING");
+	      
+	      if (buffer.compare("CLIENT_DISCONNECT")==0)
+		{
+		  print_warning("Recieved DISONNECT signal, closing down");
+		  net.WriteText("Closing down");
+		  prog_running = false;
+		  break;
+		}	  
+	      else if (buffer.compare("CLIENT_READ_SENSORS")==0)
+		{
+		  auto current_distance = soundSensor.getReading();
+		  uint8_t* rawBytes = new uint8_t[sizeof(current_distance)];
+		  std::memset(&rawBytes[0], 0, sizeof(current_distance));
+		  std::memcpy(&rawBytes[0], &current_distance, sizeof(current_distance));
+		  net.WriteData(rawBytes, sizeof(current_distance), SENSOR_TYPE);
+		  delete rawBytes;
+		}
+	      else if (buffer.compare("CLIENT_TEST_SENSOR")==0)
+		{
+		  auto dist = 200;
+		  while (dist > 30)
+		    {
+		      // Drive forward
+		      // Wait
+		      // Stop
+		      // Measure
+		      // Repeat
+		    }
+		}
+ // ============================== Both motors ======================================
+	      else if (buffer.compare("CLIENT_MOTORS_START")==0)
+		{
+		  print_msg("Starting both motors..");
+		  controller.Start();
+		}
+	      else if (buffer.compare("CLIENT_MOTORS_STOP!")==0)
+		{
+		  print_msg("Stopping both motors..");
+		  controller.Stop();
+		}
+	      else if (buffer.compare("CLIENT_MOTORS_FORWARD")==0)
+		{
+		  motorA.setDirection(0);
+		  motorB.setDirection(0);
+		}
+	      else if (buffer.compare("CLIENT_MOTORS_BACKWARD")==0)
+		{
+		  motorA.setDirection(1);
+		  motorB.setDirection(1);
+		}
+	      else if (buffer.compare("CLIENT_MOTORS_TURNLEFT")==0)
+		{
+		  controller.TurnLeft();
+		}
+	      else if (buffer.compare("CLIENT_MOTORS_TURNRIGHT")==0)
+		{
+		  controller.TurnRight();
+		}
+	      else if (buffer.compare("CLIENT_DOWNLOAD_MAP")==0)
+		{
+		  // Map size is 50x50
+		  uint8_t* data = mapHandler.getByteArray();
+		  net.WriteData(data, mapHandler.getDataSize(), MAP_TYPE);
+		}
+	      else if (buffer.compare("CLIENT_PING_READ")==0)
+		{
+		  net.WriteText("PONG");
+		}
+	      else if(buffer.compare("CLIENT_MAP_MODE_START")==0)
+		{
+		  mapHandler.MapModeStart(&controller, &soundSensor);
+		}
+	      else if(buffer.compare("CLIENT_MAP_MODE_STOP")==0)
+		{
+		  mapHandler.MapModeStop();
+		}
+	      else
+		{
+		  print_warning("Unknown message recived :");
+		  print_warning(buffer);    
+		}
 	    }
 	  
-	  if (net.getTextQueueCount() > 0)
-	    {
-	      std::list<TextPacket> queue = net.getTextQueue();
-	      for (auto it = queue.begin(); it!=queue.end(); it++)
-		{
-
-		  std::cout << "Packet value : " << it->value << std::endl;
-		  buffer = it->value;
-		  
-		  auto a = buffer.compare("CLIENT_PING");
-
-		  if (buffer.compare("CLIENT_DISCONNECT")==0)
-		    {
-		      print_warning("Recieved DISONNECT signal, closing down");
-		      net.WriteText("Closing down");
-		      prog_running = false;
-		      break;
-		    }	  
-		  else if (buffer.compare("CLIENT_READ_SENSORS")==0)
-		    {
-		      auto current_distance = soundSensor.getReading();
-		      uint8_t* rawBytes = new uint8_t[sizeof(current_distance)];
-		      std::memset(&rawBytes[0], 0, sizeof(current_distance));
-		      std::memcpy(&rawBytes[0], &current_distance, sizeof(current_distance));
-		      net.WriteData(rawBytes, sizeof(current_distance), SENSOR_TYPE);
-		      delete rawBytes;
-		    }
-		   else if (buffer.compare("CLIENT_TEST_SENSOR")==0)
-		    {
-		      auto dist = 200;
-		      while (dist > 30)
-			{
-			  // Drive forward
-			  // Wait
-			  // Stop
-			  // Measure
-			  // Repeat
-			}
-		    }
- // ============================== Both motors ======================================
-		   else if (buffer.compare("CLIENT_MOTORS_START")==0)
-		     {
-		       print_msg("Starting both motors..");
-		       controller.Start();
-		     }
-		   else if (buffer.compare("CLIENT_MOTORS_STOP!")==0)
-		     {
-		       print_msg("Stopping both motors..");
-		       controller.Stop();
-		     }
-		   else if (buffer.compare("CLIENT_MOTORS_FORWARD")==0)
-		     {
-		       motorA.setDirection(0);
-		       motorB.setDirection(0);
-		     }
-		   else if (buffer.compare("CLIENT_MOTORS_BACKWARD")==0)
-		     {
-		       motorA.setDirection(1);
-		       motorB.setDirection(1);
-		     }
-		   else if (buffer.compare("CLIENT_MOTORS_TURNLEFT")==0)
-		     {
-		       controller.TurnLeft();
-		     }
-		   else if (buffer.compare("CLIENT_MOTORS_TURNRIGHT")==0)
-		     {
-		       controller.TurnRight();
-		     }
-		   else if (buffer.compare("CLIENT_DOWNLOAD_MAP")==0)
-		     {
-		       // Map size is 50x50
-		       uint8_t* data = mapHandler.getByteArray();
-		       net.WriteData(data, mapHandler.getDataSize(), MAP_TYPE);
-		     }
-		   else if (buffer.compare("CLIENT_PING_READ")==0)
-		     {
-		       net.WriteText("PONG");
-		     }
-		   else if(buffer.compare("CLIENT_MAP_MODE_START")==0)
-		     {
-		       mapHandler.MapModeStart(&controller, &soundSensor);
-		     }
-		   else if(buffer.compare("CLIENT_MAP_MODE_STOP")==0)
-		     {
-		       mapHandler.MapModeStop();
-		     }
-		   else
-		     {
-		       print_warning("Unknown message recived :");
-		       print_warning(buffer);    
-		     }
-		}
-	      	      
-	      // We processed all element, now clear queue
-	      net.clearTextQueue();
-	      
-	    }  
-	  
-	  // Reset flag
-	  sched.resetNetworkFlag();
-	}     
+	  // We processed all element, now clear queue
+	  net.clearTextQueue();
+	}	     
     }
   
   
