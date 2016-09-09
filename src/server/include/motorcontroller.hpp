@@ -39,6 +39,7 @@ public:
   void Stop();
   void TurnRight();
   void TurnLeft();
+  bool Wait();
 
   void DriveDistance(int16_t _dist);
 };

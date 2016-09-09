@@ -15,12 +15,14 @@ extern bool debugFlag;
 NaviBuffer::NaviBuffer(uint32_t _buffer_size)
 {
   // Set start and end pointers
-  start_pt = 0;
-  end_pt   = 0;
-  buffer_offset = 0;
-  current_data_size = 0;
-  buffer_size = _buffer_size;
 
+  this->block_size = 1024;
+  this->buffer_size = _buffer_size;
+  this->blocks = buffer_size / block_size;
+
+  this->pointer_tail = &this->data[0];
+  this->pointer_head = &this->data[buffer_size - 1];
+  
 
   // Allocate memory
   data = new uint8_t[buffer_size];
@@ -48,6 +50,8 @@ uint32_t NaviBuffer::freeSpace()
     {
       print_msg("CircularBuffer::freeSpace() \t Call()");
     }
+
+
 
   return 0;
 }
@@ -105,19 +109,18 @@ void NaviBuffer::Add(uint8_t* _val, uint32_t _size)
       print_msg("NaviBuffer::Add() \t Call()");
     }
 
-  // Add _size to current_data_size so we know the amount of data we are holding
-  current_data_size += _size;
 
   // Copy data to buffer, update offset
-  std::memcpy(&data[buffer_offset], &_val[0], _size);
-  buffer_offset += _size;
+  std::memcpy(this->pointer_tail, &_val[0], _size);
+  this->pointer_tail += _size;
+
 
   // If buffer_offset is greater than buffer_size
   // reset it to zero or whatever position fit better
-  if (buffer_offset >= buffer_size)
+  if (this->isFull)
     {
       print_warning("Buffer reset position");
-      buffer_offset = 0;
+      this->pointer_tail = &this->data[0];
     }
 
 }

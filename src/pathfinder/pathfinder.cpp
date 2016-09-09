@@ -71,9 +71,6 @@ int main(int argc, char* argv[])
 
   sw.Start();
   astar.Start();
-
-  printf("what's going on? \n");
-
   sw.Stop();
 
   printf("[verbose] completed route in %d ms \n", sw.getTimeElapsed());

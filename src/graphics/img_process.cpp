@@ -63,21 +63,50 @@ int32_t Bitmap::CalculateRowSize(int32_t bpi, int32_t width)
 }
 
 
+void Bitmap::FlipLR()
+{
+
+  auto line_length = this->total_pixel_memory / this->height;
+
+
+  for (int h = 0; h < this->height; h++)
+    {
+      uint8_t* buffer = new uint8_t[this->width*3]
+
+      for (auto w = 0; w < this->width*3; w=w+3)
+	{
+	  auto offset = (line_length*h) + w;
+	  buffer[ (this->width*3) - w] = this->pixel_data[offset];
+	}
+    }
+
+}
+
 void Bitmap::SwapRGB()
 {
   uint8_t* test = new uint8_t[this->total_pixel_memory];
 
   auto line_count = 0;
   auto offset = 0;
+  auto offset_tail = this->total_pixel_memory;
   auto row_length = (this->width * 3) + this->padbytes;
+  offset_tail -= row_length;
 
-  while ( line_count != this->height )
+
+  while ( line_count != this->height-1 )
     {
-      std::memcpy(&test[offset], &this->pixel_data[total_pixel_memory - offset], row_length);
+      std::memcpy(&test[offset], &this->pixel_data[total_pixel_memory - offset_tail], row_length);
       offset += row_length;
+      offset_tail -= row_length;
       line_count++;
+      
+      //      std::cout << "[+] Current offset : [" << (int) offset << "/" << (int) this->total_pixel_memory << "]";
+      //      std::cout << "\t tail : " << (int) offset_tail << std::endl;
+      //      std::cout << "[+] Line [" << (int) line_count << "/" << (int) this->height << "]" << std::endl;
     }
 
+
+  std::cout << "Relocating memory" << std::endl;
   pixel_data = test;
 
 }

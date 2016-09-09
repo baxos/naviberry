@@ -97,6 +97,13 @@ typedef struct BITMAP_STD_PIXEL StdPixel;
 
 namespace naviberry
 {
+
+  struct Pixel
+  {
+    uint8_t RED;
+    uint8_t GREEN;
+    uint8_t BLUE;
+  }
   
   class Bitmap
   {
@@ -121,6 +128,7 @@ namespace naviberry
     void Load2(std::string filename);
     bool SaveTo(std::string filename);
     void Flip();
+    void FlipLR();
     void SwapRGB();
     int32_t getWidth();
     int32_t getHeight();

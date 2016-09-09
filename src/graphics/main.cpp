@@ -26,7 +26,11 @@ int main(int argc, char** argv)
 
       // load image nd flip it
       bmp.Load2(filename);
-      bmp.SwapRGB();
+
+      //      std::cout << "[+] Bytes per pixel : " << (int) bmp.getBytesPerPixel() << " byte(s). " << std::endl;
+
+      //
+      // bmp.SwapRGB();
       bmp.Flip();
 
 
