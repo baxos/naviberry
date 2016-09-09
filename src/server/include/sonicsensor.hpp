@@ -7,6 +7,7 @@
   * @date 2015-2016
   * @brief Class for sonic sensor module
   **/
+#include <atomic>
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -31,6 +32,7 @@ private:
   bool ready;
   bool threadRunning;
   bool bad_read;
+  std::atomic<bool> failure_flag;
   int lastReading;
   void microS_delay(int x);
   void threadFuncLoop();
@@ -40,6 +42,7 @@ public:
   void Pulse();
   void AutoLoop();
   void AutoLoopStop();
+  void Inject(int32_t _val);
   int ReadDistance();
   int32_t getReading();
 };

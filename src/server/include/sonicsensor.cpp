@@ -39,6 +39,9 @@ SonicSensor::SonicSensor(uint8_t _trig, uint8_t _echo)
   // No bad reads yet
   bad_read = false;
 
+  // Failure flag is default false
+  failure_flag = false;
+
   // Set we are ready
   ready = true;
 }
@@ -62,6 +65,35 @@ SonicSensor::~SonicSensor()
   if (threadRunning)
     {
       threadRunning = false;
+    }
+}
+
+
+/**
+ * @name Inject
+ * @brief Injects a given value to the sensor value
+ * @retval None
+ * @param _val - The value you want to use to make the check with
+ *
+ * Injects the given value to the sensor internal value, so we can see if its update 
+ * or not.
+ **/
+void SonicSensor::Inject(int32_t _val)
+{
+  auto temp = this->lastReading;
+
+  // inject new value, wait for 1 second and compare values
+  this->lastReading = _val;
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+  if (this->lastReading == _val && this->threadRunning)
+    {
+      print_warning("SonicSensor::Inject fired and error confirmed, resetting..");
+
+      // We can assume that thread is locked in error, set flags
+      this->failure_flag = true;
+      this->threadRunning = false;
     }
 }
 
@@ -131,6 +163,8 @@ void SonicSensor::threadFuncLoop()
 
   while (threadRunning)
     {
+      // everytime we fire ReadDistance() from here, we will also fire ReadDistanceLimited
+
       auto dist = this->ReadDistance();
       if (dist == -1)
 	{
@@ -147,6 +181,15 @@ void SonicSensor::threadFuncLoop()
     }
 }
 
+void SonicSensor::ReadDistanceLimit()
+{
+  
+}
+
+void SonicSensor::ReadDistanceLimitStop()
+{
+
+}
 
 /**
  * @name microS_delay
@@ -215,6 +258,13 @@ int SonicSensor::ReadDistance()
       // Wait for pin to change state
       while (echo_in == LOW)
 	{
+	  if (this->failure_flag)
+	    {
+	      // failrue flag has been raised
+	      // and we should try jump out asap
+	      goto ExitThread;
+	    }
+
 	  // Read
 	  echo_in = GPIO_read(PIN_ECHO);
 	}
@@ -225,6 +275,13 @@ int SonicSensor::ReadDistance()
       // Wait for pin to change state to low again
       while (echo_in == HIGH)
 	{
+	  if (this->failure_flag)
+	    {
+	      // failure flag has been raised
+	      // and we should try jump out asap
+	      goto ExitThread;
+	    }
+
 	  // Read
 	  echo_in = GPIO_read(PIN_ECHO);
 	}
@@ -277,6 +334,9 @@ int SonicSensor::ReadDistance()
       return (average / (reads-bad_reads));
     }
 
+
+ ExitThread:
+  return -9999;
 }
 
 
