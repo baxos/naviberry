@@ -25,4 +25,21 @@ namespace Naviberry
   };
 
 
+  
+  template <class T> class AdvancedCountdownTriggerer
+  {
+  private:
+    T *trigger_var;
+    T result_var;
+    bool ready;
+    bool running;
+    int32_t time_left;
+    void internal_thread_function();
+  public:
+    AdvancedCountdownTriggerer<T>();
+    void Init(int32_t time, T *_trigger, T _triggerVal);
+    void Start();
+    void Stop();
+  };
+
 }

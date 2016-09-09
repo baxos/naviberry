@@ -24,9 +24,46 @@ namespace Naviberry
   }
 
 
+  template <class T> AdvancedCountdownTriggerer<T>::AdvancedCountdownTriggerer()
+  {
+    // not ready before init has been run.
+    this->ready = false;
+    this->running = false;
+  }
 
-  // count down timer member functions
+  template <class T> void AdvancedCountdownTriggerer<T>::Init(int32_t time, T *_trigger, T _triggerVal)
+  {
+    this->trigger_var = _trigger;
+    this->result_var = _triggerVal;
+    this->time_left = time;
+    this->ready = true;
+  }
 
+  template <class T> void AdvancedCountdownTriggerer<T>::Start()
+  {
+    this->running = true;
+  }
 
+  template <class T> void AdvancedCountdownTriggerer<T>::Stop()
+  {
+    this->running = false;
+  }
 
+  template <class T> void AdvancedCountdownTriggerer<T>::internal_thread_function()
+  {
+    while (this->running)
+      {
+	if (this->time_left <= 0)
+	  {
+	    // Time exceeded and thread is still running
+	    // set trigger variable
+	    trigger_var = result_var;
+
+	    // stop thread
+	    this->running = false;
+	    break;
+	  }
+      }
+  }
+  
 }

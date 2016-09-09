@@ -163,8 +163,6 @@ void SonicSensor::threadFuncLoop()
 
   while (threadRunning)
     {
-      // everytime we fire ReadDistance() from here, we will also fire ReadDistanceLimited
-
       auto dist = this->ReadDistance();
       if (dist == -1)
 	{
@@ -179,16 +177,6 @@ void SonicSensor::threadFuncLoop()
 
       std::this_thread::sleep_for(std::chrono::milliseconds(freq));
     }
-}
-
-void SonicSensor::ReadDistanceLimit()
-{
-  
-}
-
-void SonicSensor::ReadDistanceLimitStop()
-{
-
 }
 
 /**
@@ -242,6 +230,9 @@ void SonicSensor::Pulse()
  **/
 int SonicSensor::ReadDistance()
 {
+  // This function will from now on, spawn a countdown thread which will trigger the
+  // failure_flag, if this function is too slow to execute.
+
   auto bad_reads = 0;
   auto average = 0;
   const auto reads = 5;

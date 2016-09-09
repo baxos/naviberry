@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <fcntl.h>
 #include <unistd.h>
+#include "./navi-utils.hpp"
 
 /**
   * @class SonicSensor
@@ -32,6 +33,7 @@ private:
   bool ready;
   bool threadRunning;
   bool bad_read;
+  Naviberry::StopWatch internal_sw;
   std::atomic<bool> failure_flag;
   int lastReading;
   void microS_delay(int x);
