@@ -1,12 +1,9 @@
-#include "./navi-utils.hpp"
-
-namespace Naviberry
+#include <chrono>
+#include <thread>
+#include "navi-utils.hpp"
+  
+void StopWatch::Start()
 {
-
-  // stopwatch member functions
-
-  void StopWatch::Start()
-  {
     this->start_time = std::chrono::system_clock::now();
   }
 
@@ -23,15 +20,17 @@ namespace Naviberry
     return time_ms;
   }
 
-
-  template <class T> AdvancedCountdownTriggerer<T>::AdvancedCountdownTriggerer()
+  // ========================================================================
+  template <class T>
+  AdvCountdown<T>::AdvCountdown()
   {
     // not ready before init has been run.
     this->ready = false;
     this->running = false;
   }
 
-  template <class T> void AdvancedCountdownTriggerer<T>::Init(int32_t time, T *_trigger, T _triggerVal)
+  template <class T> 
+  void AdvCountdown<T>::Init(int32_t time, T *_trigger, T _triggerVal)
   {
     this->trigger_var = _trigger;
     this->result_var = _triggerVal;
@@ -39,17 +38,23 @@ namespace Naviberry
     this->ready = true;
   }
 
-  template <class T> void AdvancedCountdownTriggerer<T>::Start()
+  template <class T> 
+  void AdvCountdown<T>::Start()
   {
     this->running = true;
+    
+    std::thread countdown(&AdvCountdown<T>::internal_thread_function, this);
+    countdown.detach();
   }
 
-  template <class T> void AdvancedCountdownTriggerer<T>::Stop()
+  template <class T> 
+  void AdvCountdown<T>::Stop()
   {
     this->running = false;
   }
 
-  template <class T> void AdvancedCountdownTriggerer<T>::internal_thread_function()
+  template <class T> 
+  void AdvCountdown<T>::internal_thread_function()
   {
     while (this->running)
       {
@@ -57,13 +62,20 @@ namespace Naviberry
 	  {
 	    // Time exceeded and thread is still running
 	    // set trigger variable
-	    trigger_var = result_var;
+	    *trigger_var = result_var;
 
 	    // stop thread
 	    this->running = false;
 	    break;
 	  }
+	else
+	  {
+	    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	    this->time_left--;
+	  }
       }
   }
   
-}
+
+
+template class AdvCountdown<bool>;

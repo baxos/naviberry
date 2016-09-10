@@ -3,7 +3,7 @@
 # Name of binary executable 
 outputname = Naviberry
 # the object files used
-objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o serial.o sonicsensor.o scheduler.o cbuffer.o mapping.o point.o motorcontroller.o navi-utils.o
+objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o navi-utils.o sonicsensor.o cbuffer.o mapping.o point.o motorcontroller.o
 # compile flags
 CFLAGS = -lbcm2835 -std=c++0x -pthread -O0 -ggdb # -Werror -Wall
 
@@ -11,6 +11,7 @@ CFLAGS = -lbcm2835 -std=c++0x -pthread -O0 -ggdb # -Werror -Wall
 Naviberry: $(objects)
 	g++ -o $(outputname) $(objects) $(CFLAGS) 
 	@echo Binary executable : $(outputname)
+
 motordriver.o:	./include/motordriver.cpp ./include/motordriver.hpp
 	g++ -c ./include/motordriver.cpp -o ./motordriver.o $(CFLAGS)
 
@@ -32,12 +33,6 @@ comm.o:	./include/comm.cpp ./include/comm.hpp
 sonicsensor.o:	./include/sonicsensor.cpp ./include/sonicsensor.hpp
 	g++ -c ./include/sonicsensor.cpp  $(CFLAGS)
 
-serial.o:
-	g++ -c ./include/serial.cpp  $(CFLAGS)
-
-scheduler.o:	./include/scheduler.cpp ./include/scheduler.hpp
-	g++ -c ./include/scheduler.cpp $(CFLAGS)
-
 mapping.o:	./include/mapping.cpp ./include/mapping.hpp
 	g++ -c ./include/mapping.cpp $(CFLAGS)
 
@@ -47,7 +42,7 @@ point.o:	./include/point.cpp ./include/point.hpp
 motorcontroller.o:	./include/motorcontroller.cpp ./include/motorcontroller.hpp
 	g++ -c ./include/motorcontroller.cpp $(CFLAGS)
 
-navi-utils.o:	./include/navi-utils.cpp ./include/navi-utils.hpp
+navi-utils.o:		./include/navi-utils.cpp ./include/navi-utils.hpp
 	g++ -c ./include/navi-utils.cpp $(CFLAGS)
 
 .PHONY : clean

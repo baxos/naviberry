@@ -12,7 +12,10 @@
 #include "./sonicsensor.hpp"
 #include "./bcmwrapper.hpp"
 
+
 extern bool debugFlag;
+
+
 
 /**
   * @name SonicSensor
@@ -236,7 +239,11 @@ int SonicSensor::ReadDistance()
   auto bad_reads = 0;
   auto average = 0;
   const auto reads = 5;
+  AdvCountdown<bool> safe_check;
 
+  // initiate safe_check [ 5000 ms MAX, set failure_flag to true, if we haven't called Stop()
+  safe_check.Init(5000, &this->failure_flag, true);
+  safe_check.Start();
 
   for (auto n = 0; n < reads; n++)
     {
@@ -314,6 +321,8 @@ int SonicSensor::ReadDistance()
       
     }
 
+  safe_check.Stop();
+
   // If more than half of the reads are bad_reads, consider the whole reading as bad
   // return -1;
   if ((bad_reads > (reads/2)))
@@ -327,6 +336,8 @@ int SonicSensor::ReadDistance()
 
 
  ExitThread:
+  print_warning("AutoLoop Error Detectected, trying to fix it!");
+  this->failure_flag = false;
   return -9999;
 }
 

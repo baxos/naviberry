@@ -33,8 +33,7 @@ private:
   bool ready;
   bool threadRunning;
   bool bad_read;
-  Naviberry::StopWatch internal_sw;
-  std::atomic<bool> failure_flag;
+  bool failure_flag;
   int lastReading;
   void microS_delay(int x);
   void threadFuncLoop();

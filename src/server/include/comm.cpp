@@ -18,7 +18,7 @@ extern "C"
 #include "naviberryio.hpp"
 
 // For debugging
-bool debugFlag = false;
+extern bool debugFlag;
 
 
 // ===================================== TextPacket ==================== //
@@ -246,7 +246,7 @@ void NetworkPacket::CreateTextPacket(std::string txt)
 Network::Network(std::string _host, uint16_t _port)
 {
   // Initialize buffer
-  cbuffer = new NaviBuffer(100000);
+  cbuffer = new NaviBuffer(1000);
 
   // Set class variables
   hostname = _host;
@@ -384,7 +384,7 @@ bool Network::Bind()
   if (bind(sockfd, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1)
     {
       // Error
-      print_warning("Socket failde to bind");
+      print_error("Socket failde to bind");
       return false;
     }
   else
@@ -697,18 +697,6 @@ void Network::CheckForCombinations()
 
 
 
-void Network::DumpBuffer()
-{
-  auto i = 0;
-  auto data_size = cbuffer->getDataSize();
-  uint8_t* data = cbuffer->getData();
-  for (auto i = 0; i < data_size; i++)
-    {
-      uint8_t val = data[i];
-      printf("%u \t", val);
-    }
-}
-
 // Network CheckForPackets void function
 // It searches through the class buffer
 // for 4 bytes N,A,V,I
@@ -729,7 +717,7 @@ void Network::CheckForPackets()
       bool isDone             = false;
 
       uint8_t* buffer = cbuffer->getData();
-      uint32_t buffer_size = cbuffer->getDataSize();
+      uint32_t buffer_size = cbuffer->getSize();
 
       if (debugFlag)
 	std::cout << "current buffer data size = " << buffer_size << std::endl;
@@ -909,7 +897,7 @@ void Network::Read(void)
 	std::cout << "[+] Recieved : " << n << " data from server" << std::endl;
 
 
-      cbuffer->Add(local_buffer, (uint32_t) n);
+      cbuffer->Add(local_buffer, n);
       if (debugFlag)
 	print_msg("Added data to buffer");
 

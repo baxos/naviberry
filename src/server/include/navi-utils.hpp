@@ -1,8 +1,9 @@
+#ifndef NAVIUTILS__HPP
+#define NAVIUTILS__HPP
+
 #include <chrono>
 
 
-namespace Naviberry
-{
 
   class StopWatch
   {
@@ -26,7 +27,8 @@ namespace Naviberry
 
 
   
-  template <class T> class AdvancedCountdownTriggerer
+  template <class T> 
+  class AdvCountdown
   {
   private:
     T *trigger_var;
@@ -36,10 +38,10 @@ namespace Naviberry
     int32_t time_left;
     void internal_thread_function();
   public:
-    AdvancedCountdownTriggerer<T>();
+    AdvCountdown();
     void Init(int32_t time, T *_trigger, T _triggerVal);
     void Start();
     void Stop();
   };
 
-}
+#endif

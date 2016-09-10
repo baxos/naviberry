@@ -42,7 +42,7 @@ extern "C"
 
 
 
-extern bool debugFlag;
+bool debugFlag = true;
 
 // Atomic booleans for keeping the threads running, or closing them.
 std::atomic_bool mapmodeThreadRun;
