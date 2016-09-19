@@ -70,6 +70,10 @@ NetworkPacket::NetworkPacket()
     {
       count++;
     }
+
+
+  this->bodyBytes = nullptr;
+  this->headerBytes = nullptr;
 }
 
 // NetworkPacket deconstructor
@@ -730,9 +734,6 @@ void Network::CheckForPackets()
 	  iterations_counted++;
 	  packet_found = false;
 	  pack_offset_start = 0;
-	  bool HeaderPacketFound = false;
-	  bool BodyPacketFound   = false;
-
 
 	  for (auto n=pack_offset; n <=buffer_size ; n++)
 	    {
@@ -880,7 +881,6 @@ void Network::Read(void)
   auto n                          = 0;
   const auto buff_size            = 1024; 
   uint8_t local_buffer[buff_size] = {};
-  std::string str_buffer          = "";
 
   if ( (n = recv(confd, &local_buffer, buff_size-1, 0)) == -1)
     {
