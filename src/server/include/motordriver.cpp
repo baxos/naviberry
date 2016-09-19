@@ -175,10 +175,6 @@ void DC_Motor::StartPWM(int _val)
   {
     high_sleep_duration_ms = 20;
   }
-  else if ((_val >= 10) && (_val < 20))
-  {
-    high_sleep_duration_ms = 20;
-  }
   
   
   // set to thread variable
@@ -343,6 +339,9 @@ DC_Motor::DC_Motor(uint8_t _pin_e, uint8_t _pin_l, uint8_t _pin_r)
   pin_r = _pin_r;
   pin_l = _pin_l;
   pin_e = _pin_e;
+  this->pwm_on = false;
+
+
 
   print_msg("Setting pins as outputs");
   GPIO_setup(pin_r, GPIO_OUT);
@@ -359,6 +358,9 @@ DC_Motor::DC_Motor(uint8_t _pin_e, uint8_t _pin_l, uint8_t _pin_r)
 
   print_msg("Setting direction");
   setDirection(0);
+
+
+
 
   print_msg("Motor initialized");
 }

@@ -39,7 +39,7 @@ NaviBuffer::NaviBuffer(uint32_t _buffer_size)
 NaviBuffer::~NaviBuffer()
 {
   // Free memory
-  delete data;
+  delete[] data;
 }
 
 
@@ -49,7 +49,7 @@ void NaviBuffer::Add(uint8_t* _val, size_t  _size)
   // if not print error
   if ( debugFlag)
     {
-      print_msg("NaviBuffer::Add() \t Call()");s
+      print_msg("NaviBuffer::Add() \t Call()");
     }
   
   // Check if buffer is full

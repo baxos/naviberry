@@ -47,6 +47,11 @@ SonicSensor::SonicSensor(uint8_t _trig, uint8_t _echo)
 
   // Set we are ready
   ready = true;
+
+  // Thread is not running from start
+  this->threadRunning = false;
+  this->lastReading = 0;
+
 }
 
 
@@ -167,9 +172,10 @@ void SonicSensor::threadFuncLoop()
   while (threadRunning)
     {
       auto dist = this->ReadDistance();
-      if (dist == -1)
+      if (dist == -9999)
 	{
 	  // Error reading
+	  print_warning("Error reading detected");
 	}
       else
 	{

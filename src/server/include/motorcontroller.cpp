@@ -21,8 +21,10 @@ MotorController::MotorController(DC_Motor* _motor_left, DC_Motor* _motor_right)
   // Speed is in range [0..100]
   speed = 30;
 
-  motor_left = _motor_left;
-  motor_right = _motor_right;
+  this->motor_left = _motor_left;
+  this->motor_right = _motor_right;
+  this->isReady = true;
+  this->isMoving = false;
 }
 
 /**

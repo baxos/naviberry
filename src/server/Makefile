@@ -3,7 +3,7 @@
 # Name of binary executable 
 outputname = Naviberry
 # the object files used
-objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o navi-utils.o sonicsensor.o cbuffer.o mapping.o point.o motorcontroller.o
+objects = motordriver.o bcmwrapper.o naviberryio.o comm.o server.o navi-utils.o sonicsensor.o cbuffer.o mapping.o point.o motorcontroller.o communications.o
 # compile flags
 CFLAGS = -lbcm2835 -std=c++0x -pthread -O0 -ggdb # -Werror -Wall
 
@@ -44,6 +44,9 @@ motorcontroller.o:	./include/motorcontroller.cpp ./include/motorcontroller.hpp
 
 navi-utils.o:		./include/navi-utils.cpp ./include/navi-utils.hpp
 	g++ -c ./include/navi-utils.cpp $(CFLAGS)
+
+communications.o:	./include/communications.cpp ./include/communications.hpp
+	g++ -c ./include/communications.cpp $(CFLAGS)
 
 .PHONY : clean
 clean : 

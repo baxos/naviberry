@@ -102,7 +102,7 @@ NetworkPacket::~NetworkPacket()
 	{
 	  std::cout << "[+]Freeing " << (uint32_t) bodyBytesCount << " bytes of memory" << std::endl;
 	}
-      delete bodyBytes;
+      delete[] bodyBytes;
     }
 
   if (headerBytesCount > 0)
@@ -111,7 +111,7 @@ NetworkPacket::~NetworkPacket()
 	{
 	  std::cout <<  "[+]Freeing " << (uint32_t) headerBytesCount << " bytes of memory" << std::endl;
 	}
-      delete headerBytes;
+      delete[] headerBytes;
     }
 
 }
@@ -718,9 +718,6 @@ void Network::CheckForPackets()
 
       uint8_t* buffer = cbuffer->getData();
       uint32_t buffer_size = cbuffer->getSize();
-
-      if (debugFlag)
-	std::cout << "current buffer data size = " << buffer_size << std::endl;
 
 
       // Buffer is too small to we care about it...

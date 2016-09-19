@@ -42,7 +42,7 @@ extern "C"
 
 
 
-bool debugFlag = true;
+bool debugFlag = false;
 
 // Atomic booleans for keeping the threads running, or closing them.
 std::atomic_bool mapmodeThreadRun;
@@ -75,12 +75,12 @@ int main()
 
 
   // Initialize hardware
-  DC_Motor motorA(PIN11, PIN13, PIN15);
-  DC_Motor motorB(PIN19, PIN21, PIN23);
+  //  DC_Motor motorA(PIN11, PIN13, PIN15);
+  //  DC_Motor motorB(PIN19, PIN21, PIN23);
   SonicSensor soundSensor(PIN16, PIN18);
 
   // Steering module
-  MotorController controller(&motorA, &motorB);
+  //  MotorController controller(&motorA, &motorB);
 
 
 
@@ -161,7 +161,7 @@ int main()
 		  std::memset(&rawBytes[0], 0, sizeof(current_distance));
 		  std::memcpy(&rawBytes[0], &current_distance, sizeof(current_distance));
 		  net.WriteData(rawBytes, sizeof(current_distance), SENSOR_TYPE);
-		  delete rawBytes;
+		  delete[] rawBytes;
 		}
 	      else if (buffer.compare("CLIENT_TEST_SENSOR")==0)
 		{
