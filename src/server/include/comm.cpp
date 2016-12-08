@@ -509,7 +509,6 @@ bool Network::writeRaw(uint8_t* val, size_t len)
 void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
 {
   NetworkPacket packet;
-  auto error_happened = false;
   
   // Create a new packet with the data 
   packet.CreateDataPacket(_data, _dataSize, _type);
@@ -540,7 +539,6 @@ void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
   else
     {
       print_warning("Failure happened while trying to send header packet");
-      error_happened = true;
     }
   
   
@@ -557,7 +555,6 @@ void Network::WriteData(uint8_t* _data, uint32_t _dataSize, uint8_t _type)
   else
     {
       print_warning("Failure happened while trying to send body packet");
-      error_happened = true;
     }
     
 }
@@ -659,11 +656,11 @@ void Network::CheckForCombinations()
 		{
 		  // We got match!
 		  TextPacket tp;
-		  if (ita->dataType = 0xFF)
+		  if ( ((ita->dataType) = 0xFF) )
 		    {
 		      std::string strbuffer ="";
 		      // Text packet
-		      for (auto n = 0;n < ita->dataSize; n++)
+		      for (uint32_t n = 0;n < ita->dataSize; n++)
 			{
 			  strbuffer += (char) itb->data[n];		      
 			}
@@ -735,7 +732,7 @@ void Network::CheckForPackets()
 	  packet_found = false;
 	  pack_offset_start = 0;
 
-	  for (auto n=pack_offset; n <=buffer_size ; n++)
+	  for (uint32_t n=pack_offset; n <=buffer_size ; n++)
 	    {
 	      // check for overflow
 	      if ( (n + 4 ) > buffer_size)
@@ -755,17 +752,12 @@ void Network::CheckForPackets()
 		    {
 		      if (debugFlag)
 			print_msg("Packet is a headerpacket");
-
-		      // Header packet found
-		      HeaderPacketFound = true;
 		    }
 		    else
 		      {
 			if(debugFlag)
 			  print_msg("Packet is a body packet");
 
-			// Body packet found
-			BodyPacketFound = true;
 		      }
 		  packet_found      = true;
 		  pack_offset       = n+4;

@@ -23,7 +23,7 @@ enum class Direction { Up=0, Right=1, Down=2, Left=3 };
 Direction UpdateDirectionByTurn(Direction _currentDirection, Direction _turn);
 Point IncreasePointByDirection(Point _pt, Direction _dir);
 
-static bool operator< (Point a, Point b) { return std::make_pair(a.x, a.y) < std::make_pair(b.x, b.y);}
+// static bool operator< (Point a, Point b) { return std::make_pair(a.x, a.y) < std::make_pair(b.x, b.y);}
 
 
 /**

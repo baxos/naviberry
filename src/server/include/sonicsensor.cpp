@@ -88,8 +88,6 @@ SonicSensor::~SonicSensor()
  **/
 void SonicSensor::Inject(int32_t _val)
 {
-  auto temp = this->lastReading;
-
   // inject new value, wait for 1 second and compare values
   this->lastReading = _val;
 
@@ -133,9 +131,10 @@ int32_t SonicSensor::getReading()
   **/
 void SonicSensor::AutoLoop()
 {
-  std::thread sensorThread (&SonicSensor::threadFuncLoop, this);
-  
+  std::thread sensorThread (&SonicSensor::threadFuncLoop, this); 
   sensorThread.detach();
+
+  printf("[+] thread started. \n");
 }
 
 
@@ -255,7 +254,6 @@ int SonicSensor::ReadDistance()
     {
       Pulse();
       
-      auto start_total = std::chrono::high_resolution_clock::now();
       // Start
       auto echo_in = LOW;
       

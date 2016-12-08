@@ -32,8 +32,8 @@ NaviBuffer::NaviBuffer(uint32_t _buffer_size)
   std::memcpy(this->buff_head, &val, sizeof(val));
 
 
-  printf("Address of data field : \t 0X%x8 \n", this->data);
-  printf("Address of head       : \t 0X%x8 \n", this->buff_head);
+  //  printf("Address of data field : \t 0X%x8 \n", this->data);
+  //  printf("Address of head       : \t 0X%x8 \n", this->buff_head);
 }
 
 NaviBuffer::~NaviBuffer()
@@ -63,8 +63,8 @@ void NaviBuffer::Add(uint8_t* _val, size_t  _size)
   if (this->getFreeSpace() < _size)
     {
       print_warning("Can't fit data in buffer, resets it.");
-      printf("Address of head : 0X%x8 \n", this->buff_head);
-      printf("Address of tail : 0X%x8 \n", this->buff_tail);
+      //      printf("Address of head : 0X%x8 \n", this->buff_head);
+      //      printf("Address of tail : 0X%x8 \n", this->buff_tail);
       printf("Space left      : %d \n", this->getFreeSpace());
       printf("Data size       : %zu \n", _size);
       this->Reset();
