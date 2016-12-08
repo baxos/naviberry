@@ -1,0 +1,41 @@
+List of tools used :
+
+
+For code check and testing :
+
+==============================
+
+[1].	cppcheck --enable=all
+
+[2].	gcc -Werror -Wall
+
+[3]. 	valgrind
+
+[4]. 	gdb
+
+[5]. 	ssh
+
+
+Scripting :
+
+=============================
+
+[1]. 	  Python
+
+[2].	  Bash/SH
+
+
+
+
+
+
+
+Editing :
+
+==============================
+
+[1].	Emacs
+
+[2].	ssh
+
+[3].	tmux

@@ -7,6 +7,7 @@ extern "C"
 {
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
 }
 #include "./communications.hpp"
 
@@ -213,7 +214,7 @@ void Naviberry::Communications::Read()
 	}
 
       // For debug??
-      printf (" Found %u start signatures and %u end signatures. \n", start_blocks.size(), end_blocks.size());
+      printf (" Found %zu start signatures and %zu end signatures. \n", start_blocks.size(), end_blocks.size());
 
       // Check for pairs
       for (size_t i = 0; i < end_blocks.size(); i++)
@@ -258,7 +259,7 @@ void Naviberry::Communications::Read()
 	      std::memset(&packet_core, 0, sizeof(packet_core));
 	      std::memcpy(data_to, &packet_core, sizeof(packet_core));
 	      
-	      printf("[INFO]  \n core.size : %zu \n core.type : %u \n core.Time : %u \n ", packet_core.size, packet_core.type, packet_core.time);
+	      printf("[INFO]  \n core.size : %u \n core.type : %u \n core.Time : %u \n ", packet_core.size, packet_core.type, packet_core.time);
 
 	      Naviberry::NetPacket packet;
 	      packet.setSize(packet_core.size);
