@@ -13,6 +13,7 @@ namespace Naviberry {
     std::vector<uint8_t> data;
     int32_t index;
     size_t maxSize;
+    size_t dataUsed;
   public:
     Buffer(size_t _size);
     void Reset();
@@ -21,6 +22,7 @@ namespace Naviberry {
     bool isFull();
     uint8_t* getDataPointer();
     int32_t getIndex();
+    int32_t getMemoryUsed();
   };
 
 }

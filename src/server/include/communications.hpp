@@ -29,11 +29,10 @@ namespace Naviberry {
     uint32_t time;
   };
 
-  struct NetPacketStructure{
-    uint32_t size;
-    uint32_t type;
-    uint32_t time;
-    uint8_t* data;
+  struct Netpacket{
+    NetPacketCore core;
+    std::string time_str;
+    std::vector<uint8_t> data;
   };
 
 
@@ -80,9 +79,9 @@ namespace Naviberry {
     struct sockaddr_in server_addr;
     bool ready_to_connect;
     bool connected;
-    std::vector<NetPacket> income_packets;
+    std::vector<Netpacket> income_packets;
     std::mutex read_mutex;
-    static const uint32_t MINIMUM_PACKET_SIZE = 16;
+    static const uint32_t MINIMUM_PACKET_SIZE = 12;
     std::unique_ptr<Naviberry::Buffer> buffer;
   public:
     enum class Types { System = 0 , Text = 170 };
@@ -100,7 +99,8 @@ namespace Naviberry {
     bool CreateServer();
     bool AwaitConnection();
     void AwaitConnectionNonBlock();
-    std::vector<NetPacket> PopPackets();
+    size_t getPacketCount();
+    std::vector<Netpacket> PopPackets();
   };
   
 

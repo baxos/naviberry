@@ -3,6 +3,7 @@
 #include <vector>
 #include <iomanip>
 #include <cstdio>
+#include <sstream>
 extern "C"
 {
 #include <sys/types.h>
@@ -11,8 +12,26 @@ extern "C"
 }
 #include "./communications.hpp"
 
+extern bool debugFlag;
+
+std::string DeconstructTimeUint32(uint32_t timebytes)
+{
+  // Format [ HH : MM : SS : XX }
+  uint8_t hh = 0;
+  uint8_t mm = 0;
+  uint8_t ss = 0;
+  std::ostringstream oss;
+  std::string result;
 
 
+  hh = ( (timebytes & 0xFF000000) >> 24 );
+  mm = ( (timebytes & 0x00FF0000) >> 16 );
+  ss = ( (timebytes & 0x0000FF00) >> 8 );
+
+  oss << (uint) hh << ":" << (uint) mm << ":" <<(uint) ss << ":" << "00";
+  result = oss.str();
+  return result;
+}
 
 uint32_t ConstructTimeUint32()
 {
@@ -40,7 +59,14 @@ uint32_t ConstructTimeUint32()
   return result;
 }
 
+size_t Naviberry::Communications::getPacketCount()
+{
+  this->read_mutex.lock();
+  auto temp = income_packets.size();
+  this->read_mutex.unlock();
 
+  return (size_t) temp;
+}
 
 Naviberry::Communications::Communications()
 {
@@ -64,17 +90,29 @@ Naviberry::Communications::~Communications()
     }
 }
 
-std::vector<Naviberry::NetPacket> Naviberry::Communications::PopPackets()
+std::vector<Naviberry::Netpacket> Naviberry::Communications::PopPackets()
 {
   // Lock income_packets
   // Copy the data from it to a new vector and delete it from original
 
-  std::vector<Naviberry::NetPacket> result;
+  std::vector<Naviberry::Netpacket> result;
 
   read_mutex.lock();
-  
-  std::move(this->income_packets.begin(), this->income_packets.end(), std::back_inserter(result));
-  
+
+  for ( auto p : this->income_packets )
+    {
+      Naviberry::Netpacket new_packet;
+
+      new_packet.time_str = p.time_str;
+      new_packet.data = p.data;
+      new_packet.core.size = p.core.size;
+      new_packet.core.type = p.core.type;
+      new_packet.core.time = p.core.time;
+      
+      result.push_back(new_packet);
+    }  
+
+  this->income_packets.clear();
 
   read_mutex.unlock();
 
@@ -161,6 +199,22 @@ void Naviberry::Communications::DumpBuffer()
   printf (" \n ");
 }
 
+
+void DEBUG_PRINT_V(std::vector<uint8_t> v)
+{
+
+  std::cout << "[+] DEBUG ============================== " << std::endl;
+  std::cout << "[+] SIZE : " << v.size() << std::endl;
+  std::cout << " { " ;
+  for ( size_t i = 0; i < v.size(); i++)
+    {
+      printf(" 0x%X , ", v[i]);
+    }
+
+  std::cout << " } " << std::endl << " ========= END ========== " << std::endl;
+}
+
+
 void Naviberry::Communications::Read()
 {
   //  const int32_t MAX_READ = 4096;
@@ -176,19 +230,24 @@ void Naviberry::Communications::Read()
       std::vector<std::pair<uint32_t, uint32_t>> delete_blocks;
 
       auto n = recv(this->confd, this->buffer->getDataPointer() + this->buffer->getIndex(), 1024, 0);
-      std::cout << "[+] Read Loop " << std::endl
-		<< "Recieved : " << n << " bytes." << std::endl;
-      
-      //      this->DumpBuffer();
 
-      if (n > 0)
+      if ( n == 0 )
 	{
-	  this->buffer->IncreaseIndex(n);
+	  continue;
 	}
-      else if ( n == -1 ) 
+      else if ( n < 0)
 	{
-	  // Error
+	  // error handling
 	}
+      
+
+      //      std::cout << "[+] Read Loop " << std::endl
+      //	<< "Recieved : " << n << " bytes." << std::endl;
+      
+      this->buffer->IncreaseIndex(n);
+
+
+      // ============= [1]  Find signatures ============== //
 
       
       // Iterate through memory, check for { 0, 0, N, A, V, I, 0, 0 }
@@ -201,20 +260,21 @@ void Naviberry::Communications::Read()
 	    {
 	      // We have start of block
 	      // Index at i + 8
-	      auto index = i + 8;
+	      //	      auto index = i + 8;
+	      auto index = i;
 	      start_blocks.push_back(index);
 	    }
 	  if (data[0] == 0 && data[i+1] == 0 && data[i+2] == 'I' && data[i+3] == 'V' && data[i+4] == 'A' && data[i+5] == 'N' && data[i+6] == 0 && data[i+7] == 0)
 	    {
 	      // We have end block
 	      // Index at i
-	      auto index = i ;
+	      auto index = i + 8;
 	      end_blocks.push_back(index);
 	    }
 	}
 
-      // For debug??
-      printf (" Found %zu start signatures and %zu end signatures. \n", start_blocks.size(), end_blocks.size());
+
+      // ============ [2]  CONFIRM MATCH ========== // 
 
       // Check for pairs
       for (size_t i = 0; i < end_blocks.size(); i++)
@@ -225,73 +285,69 @@ void Naviberry::Communications::Read()
 	    }
 
 	  auto paired_block = std::make_pair(start_blocks[i], end_blocks[i]);
-	  paired_blocks.push_back(paired_block);
+	  if ( paired_block.first < paired_block.second )
+	    {
+	      paired_blocks.push_back(paired_block);
+	    }
 	}
 
 
-      // If there are pairs found
-      if ( paired_blocks.empty() != true)
+
+      // =========== [3]  ALLOCATE MEMORY  ========== //
+
+      if ( paired_blocks.empty() == false)
 	{
-	  this->read_mutex.lock();
-	  for ( auto p : paired_blocks)
+	  for ( auto e : paired_blocks )
 	    {
-	      if (p.first > p.second )
+	      Naviberry::Netpacket netpacket;
+
+	      // Allocate memory for the expected size and add the structure for ready
+	      auto data = this->buffer->getDataPointer() + e.first;	     
+
+	      // Copy packet core information
+	      std::memcpy(&netpacket.core, &data[8], sizeof(Naviberry::NetPacketCore));
+
+	      // Write str formatted time format to the advanced packet structure
+	      netpacket.time_str = DeconstructTimeUint32(netpacket.core.time);
+	      
+	      // Copy data to the packet structure
+	      size_t data_length = netpacket.core.size - sizeof(Naviberry::NetPacketCore);
+	      
+	      // Make room for it
+	      netpacket.data.resize(data_length);
+	      
+	      // Copy it
+	      std::memcpy(netpacket.data.data(), &data[24], data_length);
+
+	      if ( debugFlag )
 		{
-		  continue;
+
+		  std::cout << std::endl;
+		  std::cout << "[+] Packet Information :" << std::endl
+			    << "\t core.size = " << netpacket.core.size << std::endl
+			    << "\t core.type = " << netpacket.core.type << std::endl
+			    << "\t data.size = " << netpacket.data.size() << std::endl
+			    << "\t time      = " << netpacket.time_str << std::endl 
+			    << std::endl;
 		}
-	      printf("Found packet! \n");
-	      
-	      size_t expected_size = p.second - p.first;
-	      
-	      std::vector<uint8_t> packet_block;
-	      packet_block.resize(expected_size);
-	      auto data_from = this->buffer->getDataPointer();
-	      auto data_to = packet_block.data();
 
-	      printf("Expected packet size : %zu \n", expected_size);
+	      this->read_mutex.lock();
+	      income_packets.push_back(netpacket);
+	      std::cout << "[+] Income packets.size() == " << income_packets.size() << std::endl;
+	      this->read_mutex.unlock();
 
 
-	      printf("Copying data from network buffer to a temporary buffer. \n");
-	      std::memcpy(data_from, data_to, expected_size);	      
-	      
-	      Naviberry::NetPacketCore packet_core;
-	      printf("Copying data from temporary buffer to Packet Core  Structure. \n");
-	      std::memset(&packet_core, 0, sizeof(packet_core));
-	      std::memcpy(data_to, &packet_core, sizeof(packet_core));
-	      
-	      printf("[INFO]  \n core.size : %u \n core.type : %u \n core.Time : %u \n ", packet_core.size, packet_core.type, packet_core.time);
 
-	      Naviberry::NetPacket packet;
-	      packet.setSize(packet_core.size);
-	      packet.setType(packet_core.type);
-	      packet.setTime(packet_core.time);
-	      
-	      printf("Copying data to newly created packet structure. \n");
-	      std::memcpy(data_to + this->MINIMUM_PACKET_SIZE, packet.getData(), packet.getSize());
-	      // We have a packet.. add it to queue
-	      income_packets.push_back(packet);
-	      
-	      // Release bytes from buffer..
-	      delete_blocks.push_back( std::make_pair( (uint32_t) p.first - 8, (uint32_t) p.second + 8));
-	      printf("\t [Done] \n");
-	    }				 
-	  
-	  
-	  // Delete
-	  for ( auto e : delete_blocks )
-	    {
-	      printf("Removing old data from network buffer. \n");
 	      this->buffer->Delete(e.first, e.second);
-	      printf("\t [Done] \n");
+	 
 	    }
-
-	  this->read_mutex.unlock();
 	}
       
-      printf("[Done] : Network read iteration. \n"); 
     }
+  
   // Disconnected..
   printf("Exiting network read loop. \n");
 }
 
 
+      

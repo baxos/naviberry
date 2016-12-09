@@ -68,6 +68,7 @@ int main()
       print_error("Error creating server.");
     }
 
+  print_msg("All ready, waiting for connection.");
 
   // Block until connection is happeneing..
   communications.AwaitConnection();
@@ -79,18 +80,19 @@ int main()
 
   while (true)
     {
-      
-      auto incoming  = communications.PopPackets();
-      /*
-      for ( auto p : incoming)
+      if (communications.getPacketCount() > 5 )
 	{
-	  std::cout << "[+] Packet recieved : "
-	       << "Size : " << p.getSize() 
-	       << "Type : " << p.getType()
-	       << "Time : " << p.getTime()
-	       << std::endl;
+	  auto packets = communications.PopPackets();
+	  print_msg("Popping packets .. ");
+	  for ( auto p : packets )
+	    {
+	      std::cout << "=== Packet ===" << std::endl
+			<< "time = " << p.time_str << std::endl
+			<< "size = " << p.core.size << std::endl
+			<< "data.size = " << p.data.size() << std::endl
+			<< std::endl;
+	    }
 	}
-      */ 
     }
   
   
