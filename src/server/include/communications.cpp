@@ -8,11 +8,26 @@ extern "C"
 {
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 #include <unistd.h>
 }
 #include "./communications.hpp"
 
 extern bool debugFlag;
+
+std::string DeconstructDataToStr(std::vector<uint8_t> data)
+{
+  std::ostringstream oss;
+  std::string result;
+
+  for ( auto b : data )
+    {
+      oss << (char) b;
+    }
+
+  result = oss.str();
+  return result;
+}
 
 std::string DeconstructTimeUint32(uint32_t timebytes)
 {
@@ -33,7 +48,7 @@ std::string DeconstructTimeUint32(uint32_t timebytes)
   return result;
 }
 
-uint32_t ConstructTimeUint32()
+uint32_t Naviberry::ConstructTimeUint32()
 {
   uint32_t result = 0;
   std::time_t t = std::time(NULL);
@@ -58,6 +73,70 @@ uint32_t ConstructTimeUint32()
   
   return result;
 }
+
+// ================================ Channel class =========================== //
+
+Naviberry::Channels::Channels()
+{
+  this->idCounter = 0;
+  this->storedChannels.reserve(1024);
+
+  this->Create("system");
+  this->Create("master");
+}
+
+std::string Naviberry::Channels::fromId(uint32_t _id)
+{
+  for ( auto c : this->storedChannels )
+    {
+      if ( c.id == _id )
+	{
+	  return c.name;
+	}
+    }
+
+  return "NOTVALID";
+}
+
+uint32_t Naviberry::Channels::fromName(std::string _name)
+{
+  for ( auto c : this->storedChannels )
+    {
+      if ( c.name == _name )
+	{
+	  return c.id;
+	}
+    }
+
+  return 9999;
+}
+
+bool Naviberry::Channels::Create(std::string _name)
+{
+  for ( auto c : this->storedChannels )
+    {
+      if ( c.name == _name )
+	{
+	  return false;
+	}
+    }
+
+
+  ChannelStruct newchannel;
+  newchannel.id = this->requestId();
+  newchannel.name = _name;
+  this->storedChannels.push_back(newchannel);
+  return true;
+}
+
+uint32_t Naviberry::Channels::requestId()
+{
+  uint32_t temp = this->idCounter;
+  this->idCounter++;
+  return temp;
+}
+
+// ==================================== Communications class ======================= //
 
 size_t Naviberry::Communications::getPacketCount()
 {
@@ -108,7 +187,7 @@ std::vector<Naviberry::Netpacket> Naviberry::Communications::PopPackets()
       new_packet.core.size = p.core.size;
       new_packet.core.type = p.core.type;
       new_packet.core.time = p.core.time;
-      
+      new_packet.channel = p.channel;
       result.push_back(new_packet);
     }  
 
@@ -214,6 +293,48 @@ void DEBUG_PRINT_V(std::vector<uint8_t> v)
   std::cout << " } " << std::endl << " ========= END ========== " << std::endl;
 }
 
+void Naviberry::Communications::WriteText(std::string data)
+{
+  const char start_bytes[] = { 0, 0, 'N', 'A', 'V', 'I', 0, 0 };
+  const char end_bytes[]   = { 0, 0, 'I', 'V', 'A', 'N', 0, 0 };
+  Naviberry::Netpacket packet;
+  // startbytes = 8, endbytes = 8 , hence 16
+  size_t packet_total_size = 16;
+
+  // Core data
+  packet.core.size = sizeof(NetPacketCore) + data.length();
+  packet.core.type = this->channels.fromName("system");
+  packet.core.time = ConstructTimeUint32();
+
+  // packet_size + 12
+  packet_total_size += sizeof(NetPacketCore);
+
+  // paket_size + data length
+  packet_total_size += data.length();
+
+
+  // vector write
+
+  // prep vectors
+  struct iovec iov[4];
+  iov[0].iov_base = (void*) start_bytes;
+  iov[0].iov_len  = 8;
+  iov[1].iov_base = (void*) &packet.core;
+  iov[1].iov_len  = sizeof(NetPacketCore);
+  iov[2].iov_base = (void*) data.c_str();
+  iov[2].iov_len  = data.length();
+  iov[3].iov_base = (void*) end_bytes;
+  iov[3].iov_len  = 8;
+
+  // write them out
+  size_t data_written = 0;
+
+  data_written = writev(this->confd, iov, 4);
+  if ( data_written == packet_total_size )
+    {
+      std::cout << "[+] Data written successfully." << std::endl;
+    }
+}
 
 void Naviberry::Communications::Read()
 {
@@ -317,7 +438,9 @@ void Naviberry::Communications::Read()
 	      netpacket.data.resize(data_length);
 	      
 	      // Copy it
-	      std::memcpy(netpacket.data.data(), &data[24], data_length);
+	      std::memcpy(netpacket.data.data(), &data[20], data_length);
+
+	      netpacket.channel = netpacket.core.type;
 
 	      if ( debugFlag )
 		{
@@ -328,7 +451,15 @@ void Naviberry::Communications::Read()
 			    << "\t core.type = " << netpacket.core.type << std::endl
 			    << "\t data.size = " << netpacket.data.size() << std::endl
 			    << "\t time      = " << netpacket.time_str << std::endl 
-			    << std::endl;
+			    << "data.value   = ";
+
+		  for ( auto c : netpacket.data )
+		    {
+		      std::cout << (char) c ;
+		    }
+		  std::cout << std::endl << std::endl;
+
+		
 		}
 
 	      this->read_mutex.lock();

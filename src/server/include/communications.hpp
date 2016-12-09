@@ -11,6 +11,7 @@
 #include <memory>
 #include <utility>
 #include <thread>
+#include <map>
 extern "C"
 {
 #include <sys/types.h>
@@ -20,6 +21,9 @@ extern "C"
 
 #include "./utility.hpp"
 #include "./buffer.hpp"
+
+
+std::string DeconstructDataToStr(std::vector<uint8_t> data);
 
 namespace Naviberry {
 
@@ -31,17 +35,41 @@ namespace Naviberry {
 
   struct Netpacket{
     NetPacketCore core;
+    uint32_t channel;
     std::string time_str;
     std::vector<uint8_t> data;
   };
-
-
 
   // Public functions..
   uint32_t ConstructTimeUint32();
   void SearchForPackets();
 
 
+  struct ChannelStruct
+  {
+    uint32_t id;
+    std::string name;
+  };
+
+  class Channels
+  {
+  private:
+    std::vector<ChannelStruct> storedChannels;
+    uint32_t idCounter;
+
+    uint32_t requestId();
+    bool containsId();
+    bool containsName();
+  public:
+    Channels();
+    std::string fromId(uint32_t _id);
+    uint32_t fromName(std::string _name);
+    bool Create(std::string _name);
+  };
+
+
+
+  /*
   class NetPacket
   {
   private:
@@ -67,7 +95,7 @@ namespace Naviberry {
       info.time = _time;
     }
   };
-
+  */
 
   class Communications
   {
@@ -88,6 +116,7 @@ namespace Naviberry {
     ~Communications();
     Communications();
     Communications(std::string _ip, int32_t _port);
+    Channels channels;
     void DumpBuffer();
     void Connect();
     void Read();
