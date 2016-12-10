@@ -157,7 +157,7 @@ Naviberry::Communications::Communications()
   this->server_addr.sin_port = htons(this->port);
   this->server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  this->buffer = make_unique<Naviberry::Buffer> (10000);
+  this->buffer = make_unique<Naviberry::Buffer> (512);
 
 }
 
