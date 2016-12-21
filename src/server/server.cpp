@@ -51,6 +51,10 @@ int main()
       exit(-1);
     }
 
+
+  bool program_run = true;
+
+
   // We take care of the system signals
   signal(SIGINT, signal_callback_handle);
 
@@ -78,7 +82,7 @@ int main()
   communications.StartRead();
 
 
-  while (true)
+  while (program_run)
     {
       if (communications.getPacketCount() > 0 )
 	{
@@ -86,34 +90,36 @@ int main()
 	  print_msg("Popping packets .. ");
 	  for ( auto p : packets )
 	    {
-	      /*
-	      // Viewable print to stdout
-	      std::cout << "=== Packet ===" << std::endl
-			<< "time       = " << p.time_str << std::endl
-			<< "size       = " << p.core.size << std::endl
-			<< "data.size  = " << p.data.size() << std::endl
-			<< "data.value = [ "; 
-
-	      for ( auto d : p.data )
-		{
-		  std::cout << (char) d ;
-		}
-	      std::cout << " ]" << std::endl <<  std::endl;
-	      */
-
-
 	      // Lets parse data, split it up in different sections
 	      if ( p.channel == communications.channels.fromName("system") )
 		{
 		  print_msg("System message. ");
 		  auto data_msg = DeconstructDataToStr(p.data);
+		  
+		  std::cout << "\t Recieved : " << data_msg << " at " << p.time_str 
+			    << "." << std::endl;
 
+		  
+		  // And parse by data field.
 		  if ( data_msg == "PING" )
 		    {
-		      std::cout << "\t Recieved at " << p.time_str << "." << std::endl;
 		      std::cout << "\t Responding with a pong" << std::endl;
-
 		      communications.WriteText("PONG");
+		    }
+		  else if ( data_msg == "SIG_DISCONNECT" )
+		    {
+		      std::cout << "Disconnecting.." << std::endl;
+		      program_run = false;
+		    }
+		  else if ( data_msg == "SIG_DISTANCE_READ" )
+		    {
+
+		      auto data_sensor = soundSensor.TestRead();
+		      auto data_str    = std::to_string(data_sensor) + " cm";
+		      std::cout << "Reading sensor value : "
+				<< data_str
+				<< std::endl;
+		      communications.WriteText(data_str);
 		    }
 		}
 	    }

@@ -45,6 +45,7 @@ public:
   void AutoLoopStop();
   void Inject(int32_t _val);
   int ReadDistance();
+  int32_t TestRead();
   int32_t getReading();
 };
 

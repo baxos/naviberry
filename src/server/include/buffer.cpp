@@ -20,7 +20,7 @@ void Naviberry::Buffer::IncreaseIndex(int32_t _val)
     {
       std::cout << "[-] Buffer almost full! " << (100 - this->getMemoryUsed()) << " % left."
 		<<std::endl;
-      this->index = 0;
+      this->Reset();
     }
 }
 
@@ -74,6 +74,7 @@ int32_t Naviberry::Buffer::getMemoryUsed()
 
 void Naviberry::Buffer::Reset()
 {
-  this->data.erase(this->data.begin(), this->data.end());
-  this->data.reserve(this->maxSize);
+  // Set index to start of the vector
+  this->index = 0;
+  this->dataUsed = 0;
 }

@@ -103,6 +103,47 @@ void SonicSensor::Inject(int32_t _val)
     }
 }
 
+
+int32_t SonicSensor::TestRead()
+{
+  int32_t result = 0;
+  typedef std::chrono::duration<float> fsec;
+  typedef std::chrono::microseconds us;
+
+  // Send a pulse of a length of minimum 10 us
+  GPIO_out(PIN_TRIG, HIGH);
+  this->microS_delay(10);
+  GPIO_out(PIN_TRIG, LOW);
+
+
+  // Wait for pulse on ehco pin
+  while ( GPIO_read(PIN_ECHO) == LOW );
+
+  // When we recieve the pulse on the echo pin, we measure how long time it is held
+  // high.
+  // Now start the time measurement
+  auto start_echo = std::chrono::high_resolution_clock::now();
+
+  while ( GPIO_read(PIN_ECHO) == HIGH );
+
+  auto end_echo = std::chrono::high_resolution_clock::now();
+
+  fsec pulse_width = end_echo - start_echo;
+  us pulse_ms = std::chrono::duration_cast<us>(pulse_width);
+
+  // Now we can calculate the distance to the nearest object to the sensor
+  // delta_t [ cm ] = pulse_width / 58 ;  
+  // Assuming the speed of sound to be ~ 340 m/s
+  std::cout << "ms count : " << pulse_ms.count() << " \t pulse_width_tick : " 
+	    << pulse_width.count()
+	    << std::endl;
+  float floated_result  = pulse_ms.count() / 58.0;
+
+  result = (int32_t) floated_result;
+
+  return result;
+}
+
 /**
   * @name getReading()
   * @brief Returns the last reading.

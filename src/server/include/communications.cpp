@@ -149,6 +149,8 @@ size_t Naviberry::Communications::getPacketCount()
 
 Naviberry::Communications::Communications()
 {
+  const auto NETWORK_BUFFER_SIZE = 1024 * 10;
+
   // Init comm class
   this->port = 2000;
   this->ip_address = "127.0.0.1";
@@ -157,7 +159,7 @@ Naviberry::Communications::Communications()
   this->server_addr.sin_port = htons(this->port);
   this->server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  this->buffer = make_unique<Naviberry::Buffer> (512);
+  this->buffer = make_unique<Naviberry::Buffer> (NETWORK_BUFFER_SIZE);
 
 }
 
